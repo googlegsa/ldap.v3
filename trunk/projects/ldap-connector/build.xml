@@ -16,22 +16,11 @@
   <property name="classes-prod.dir" value="${build-prod.dir}/classes" />
   <property name="classes-tests.dir" value="${build-tests.dir}/classes" />
 
-  <!-- <property name="filesystem-project.dir" value="../file-system-connector" /> -->
-
-  <property name="thirdparty-prod-jar.dir" value="${filesystem-project.dir}/third_party/prod" />
-  <property name="thirdparty-test-jar.dir" value="${filesystem-project.dir}/third_party/test" />
-
   <property name="connector-manager.dir"
             location="${connector-manager-projects.dir}/connector-manager" />
   <property name="spi.jar.dir" value="${connector-manager.dir}/dist/jarfile" />
   <property name="connector-manager-thirdparty-jar.dir"
     location="${connector-manager-projects.dir}/connector-manager/third-party" />
-  <property name="connector-manager-thirdparty-tests-jar.dir"
-    location="${connector-manager-thirdparty-jar.dir}/tests" />
-
-  <property name="file-system-connector.dir"
-            location="${file-system-connector-projects.dir}/file-system-connector" />
-  <property name="fc.jar.dir" value="${file-system-connector.dir}/build/prod/jar" />
 
   <property name="config.dir" value="config" />
 
@@ -44,6 +33,8 @@
   <property name="jar-tests.dir" value="${build-tests.dir}/jar" />
   <property name="jar-tests.file" value="${jar-tests.dir}/connector-ldap-tests.jar" />
 
+  <property name="tests_out.dir" value="tests_outdir" />
+
   <property name="zip.dir" value  = "${build.dir}/file" />
   <property name="config-zip.dir" value  = "${zip.dir}/Config" />
   <property name="lib-zip.dir" value  = "${zip.dir}/Lib" />
@@ -52,8 +43,8 @@
 
   <property file="${config.dir}/build_code_coverage.properties" />
   <path id="cobertura.classpath">
-    <fileset dir="${thirdparty-prod-jar.dir}">
-      <include name="**/*.jar" />
+    <fileset dir="third_party">
+      <include name="prod/*.jar" />
     </fileset>
   </path>
 
@@ -75,13 +66,15 @@
   <target name="compile_prod" depends="init">
     <!-- compile java source files -->
     <javac srcdir="${src-prod.dir}" destdir="${classes-prod.dir}"
+           includeantruntime="false"
            debug="${COMPILE_DEBUG_FLAG}"
            debuglevel="${COMPILE_DEBUG_LEVEL}"
            target="1.5" source="1.5">
       <classpath>
         <fileset dir="${spi.jar.dir}" includes="**/*.jar" />
-        <fileset dir="${fc.jar.dir}" includes="**/*.jar" />
-        <fileset dir="${thirdparty-prod-jar.dir}" includes="**/*.jar" />
+        <fileset dir="${connector-manager-thirdparty-jar.dir}">
+          <include name="prod/*.jar" />
+        </fileset>
       </classpath>
     </javac>
   </target>
@@ -108,16 +101,16 @@
   <target name="compile_tests" depends="init,jar_prod">
     <!-- compile java source files for tests -->
     <javac srcdir="${src-tests.dir}" destdir="${classes-tests.dir}"
+           includeantruntime="false"
            debug="${COMPILE_DEBUG_FLAG}"
            debuglevel="${COMPILE_DEBUG_LEVEL}"
            target="1.5" source="1.5">
       <classpath>
         <fileset dir="${spi.jar.dir}" includes="**/*.jar" />
-        <fileset dir="${fc.jar.dir}" includes="**/*.jar" />
-        <fileset dir="${thirdparty-prod-jar.dir}" includes="**/*.jar" />
         <fileset file="${jar-prod.file}" />
-        <fileset dir="${connector-manager-thirdparty-tests-jar.dir}">
-          <include name="**/junit.jar" />
+        <fileset dir="${connector-manager-thirdparty-jar.dir}">
+          <include name="prod/*.jar" />
+          <include name="tests/junit.jar" />
         </fileset>
       </classpath>
     </javac>
@@ -163,14 +156,10 @@
       <classpath>
         <pathelement location="${classes-tests.dir}" />
         <fileset dir="${connector-manager-thirdparty-jar.dir}">
-          <include name="**/spring.jar" />
-          <include name="**/commons-logging.jar" />
-        </fileset>
-        <fileset dir="${connector-manager-thirdparty-tests-jar.dir}">
-          <include name="**/junit.jar" />
+          <include name="prod/*.jar" />
+          <include name="tests/junit.jar" />
         </fileset>
         <fileset dir="${spi.jar.dir}" includes="**/*.jar" />
-        <fileset dir="${thirdparty-prod-jar.dir}" includes="**/*.jar" />
         <pathelement location="${jar-prod.file}" />
       </classpath>
       <formatter type="xml" />
@@ -219,16 +208,25 @@
 
 
   <target name="compile_code_coverage" depends="init_code_coverage">
-    <javac srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
+    <javac srcdir="${src.dir}" destdir="${classes.dir}" 
+           includeantruntime="false"
+           debug="true">
       <classpath>
         <fileset dir="${spi.jar.dir}" includes="**/*.jar" />
-        <fileset dir="${thirdparty-prod-jar.dir}" includes="**/*.jar" />
+        <fileset dir="${connector-manager-thirdparty-jar.dir}">
+          <include name="prod/*.jar" />
+        </fileset>
       </classpath>
     </javac>
-    <javac srcdir="${test.dir}" destdir="${classes.dir}" debug="true">
+    <javac srcdir="${test.dir}" destdir="${classes.dir}" 
+           includeantruntime="false"
+           debug="true">
       <classpath>
         <fileset dir="${spi.jar.dir}" includes="**/*.jar" />
-        <fileset dir="${thirdparty-prod-jar.dir}" includes="**/*.jar" />
+        <fileset dir="${connector-manager-thirdparty-jar.dir}">
+          <include name="prod/*.jar" />
+          <include name="tests/junit.jar" />
+        </fileset>
       </classpath>
     </javac>
   </target>
