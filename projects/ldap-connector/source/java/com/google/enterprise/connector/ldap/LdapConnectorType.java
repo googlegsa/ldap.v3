@@ -340,11 +340,11 @@ public class LdapConnectorType implements ConnectorType {
         Collection<String> simpleAuthnFieldNameErrorKeys = new ArrayList<String>();
         LOG.fine("Validating Simple Authentication username ["+username+"] and password");
         // validate each field - username and password are required
-        if (username.length() == 0) {
+        if (username.isEmpty()) {
           simpleAuthnFieldNameErrorKeys.add(ConfigName.USERNAME.toString());
           LOG.info("Username is empty");
         }
-        if (password.length() == 0) {
+        if (password.isEmpty()) {
           simpleAuthnFieldNameErrorKeys.add(ConfigName.PASSWORD.toString());
           LOG.info("Password is empty");
         }

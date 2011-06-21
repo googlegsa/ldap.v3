@@ -22,6 +22,8 @@ import com.google.enterprise.connector.ldap.ConnectorFields.AbstractField;
 import com.google.enterprise.connector.ldap.MockLdapHandlers.SimpleMockLdapHandler;
 import com.google.enterprise.connector.spi.ConfigureResponse;
 
+import junit.framework.TestCase;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -29,8 +31,6 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import junit.framework.TestCase;
 
 public class LdapConnectorTypeTest extends TestCase {
 
@@ -73,17 +73,25 @@ public class LdapConnectorTypeTest extends TestCase {
   }
 
   /**
-   * We expect that the user will press save config twice: the first time after
-   * supplying enough info to get a connection, after which we get the schema
-   * and return a new form populated with that schema; second, after the user
-   * has checked off some of the schema elements. This test looks at the first
-   * case.
+   * We expect that the user will press save config twice: the first time
+   * after supplying enough info to get a connection, after which we get the
+   * schema and return a new form populated with that schema; second, after the
+   * user has checked off some of the schema elements.
+   *
+   * This test looks at the first case.
    */
   public void testValidateConfigGetSchema() throws Exception {
     SimpleMockLdapHandler basicMock = MockLdapHandlers.getBasicMock();
     LdapConnectorType lct = new LdapConnectorType(basicMock);
     ResourceBundle b = lct.getResourceBundle(Locale.US);
-    ImmutableMap<String, String> originalConfig = ImmutableMap.<String, String> builder().put("authtype", "ANONYMOUS").put("port", "389").put("hostname", "ldap.realistic-looking-domain.com").put("basedn", "ou=people,dc=example,dc=com").put("filter", "ou=people").build();
+    ImmutableMap<String, String> originalConfig =
+        ImmutableMap.<String, String> builder().
+        put("authtype", "ANONYMOUS").
+        put("port", "389").
+        put("hostname", "ldap.realistic-looking-domain.com").
+        put("basedn", "ou=people,dc=example,dc=com").
+        put("filter", "ou=people").
+        build();
     ConfigureResponse cr = lct.validateConfig(originalConfig, Locale.US, null);
     String formSnippet = cr.getFormSnippet();
     System.out.println(formSnippet);
@@ -96,13 +104,26 @@ public class LdapConnectorTypeTest extends TestCase {
     ConnectorFieldsTest.validateXhtml(formSnippet);
     List<String> lines = findMatchingLines(formSnippet, "schema");
     assertTrue(0 < lines.size());
+    String p = b.getString("schema_key");
+    String line = findMatchingLine(formSnippet, p);
+    System.out.println(line);
+    assertTrue(line.contains("type=\"text\""));
   }
 
   public void testValidateConfigGetSchemaSimpleAuth() throws Exception {
     SimpleMockLdapHandler basicMock = MockLdapHandlers.getBasicMock();
     LdapConnectorType lct = new LdapConnectorType(basicMock);
     ResourceBundle b = lct.getResourceBundle(Locale.US);
-    ImmutableMap<String, String> originalConfig = ImmutableMap.<String, String> builder().put("authtype", "SIMPLE").put("username", "foo").put("password", "bar").put("port", "1389").put("hostname", "ldap.realistic-looking-domain.com").put("basedn", "ou=people,dc=example,dc=com").put("filter", "ou=people").build();
+    ImmutableMap<String, String> originalConfig =
+        ImmutableMap.<String, String> builder().
+        put("authtype", "SIMPLE").
+        put("username", "foo").
+        put("password", "bar").
+        put("port", "1389").
+        put("hostname", "ldap.realistic-looking-domain.com").
+        put("basedn", "ou=people,dc=example,dc=com").
+        put("filter", "ou=people").
+        build();
     ConfigureResponse cr = lct.validateConfig(originalConfig, Locale.US, null);
     String formSnippet = cr.getFormSnippet();
     System.out.println(formSnippet);
@@ -116,9 +137,14 @@ public class LdapConnectorTypeTest extends TestCase {
     String line = findMatchingLine(formSnippet, "SIMPLE");
     assertTrue("SIMPLE should be selected", line.contains("selected"));
 
+
     ConnectorFieldsTest.validateXhtml(formSnippet);
     List<String> lines = findMatchingLines(formSnippet, "schema");
     assertTrue(0 < lines.size());
+    String p = b.getString("schema_key");
+    line = findMatchingLine(formSnippet, p);
+    System.out.println(line);
+    assertTrue(line.contains("type=\"text\""));
   }
 
   /*
@@ -128,48 +154,66 @@ public class LdapConnectorTypeTest extends TestCase {
   public void testValidateConfigWithSchema() {
     SimpleMockLdapHandler basicMock = MockLdapHandlers.getBasicMock();
     LdapConnectorType lct = new LdapConnectorType(basicMock);
-    ImmutableMap<String, String> originalConfig = ImmutableMap.<String, String> builder().put("port", "").put("authtype", "ANONYMOUS").put("hostname", "ldap.realistic-looking-domain.com").put("googleConnectorName", "x").put("googleConnectorWorkDir", "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF/connectors/ldapConnector/x").put("password", "test").put("schema_10", "dn").put("username", "admin").put("schema_9", "employeestatus").put("schema_8", "employeenumber").put("method", "STANDARD").put("basedn", "ou=people,dc=example,dc=com").put("googleWorkDir", "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF").put("filter", "ou=people").build();
+    ImmutableMap<String, String> originalConfig =
+        ImmutableMap.<String, String> builder().
+        put("port", "").
+        put("authtype", "ANONYMOUS").
+        put("hostname", "ldap.realistic-looking-domain.com").
+        put("googleConnectorName", "x").
+        put("googleConnectorWorkDir",
+        "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF/connectors/ldapConnector/x").
+        put("password", "test").
+        put("schema_10", "dn").
+        put("username", "admin").
+        put("schema_9", "employeestatus").
+        put("schema_8", "employeenumber").
+        put("method", "STANDARD").
+        put("basedn", "ou=people,dc=example,dc=com").
+        put("googleWorkDir", "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF").
+        put("filter", "ou=people").
+        build();
 
-    ImmutableMap<String, String> expectedDefaults = ImmutableMap.<String, String> builder().put("schema_key", "dn").build();
+    ImmutableMap<String, String> expectedDefaults =
+        ImmutableMap.<String, String> builder().
+        put("schema_key", "dn").
+        build();
 
     ConfigureResponse cr = lct.validateConfig(originalConfig, Locale.US, null);
 
     doPositiveValidateConfig(originalConfig, expectedDefaults, cr);
   }
 
-  // public void testValidateConfigWithSchemaAndDefaults() {
-  // SimpleMockLdapHandler basicMock = MockLdapHandlers.getBasicMock();
-  // LdapConnectorType lct = new LdapConnectorType(basicMock);
-  // ImmutableMap<String, String> originalConfig =
-  // ImmutableMap.<String, String> builder().
-  // put("hostname", "ldap.realistic-looking-domain.com").
-  // put("googleConnectorName", "x").
-  // put("googleConnectorWorkDir",
-  // "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF/connectors/ldapConnector/x").
-  // put("schema_10", "dn").
-  // put("username", "admin").
-  // put("basedn", "ou=people,dc=example,dc=com").
-  // put("googleWorkDir",
-  // "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF").
-  // put("filter", "ou=people").
-  // build();
-  //
-  // ImmutableMap<String, String> expectedDefaults =
-  // ImmutableMap.<String, String> builder().
-  // put("schema_key", "dn").
-  // put("method", "STANDARD").
-  // put("authtype", "ANONYMOUS").
-  // put("port", "389").
-  // build();
-  //
-  // ConfigureResponse cr = lct.validateConfig(originalConfig, Locale.US, null);
-  //
-  // doPositiveValidateConfig(originalConfig, expectedDefaults, cr);
-  // }
+  public void testValidateConfigWithSchemaAndDefaults() {
+    SimpleMockLdapHandler basicMock = MockLdapHandlers.getBasicMock();
+    LdapConnectorType lct = new LdapConnectorType(basicMock);
+    ImmutableMap<String, String> originalConfig =
+        ImmutableMap.<String, String> builder().
+        put("hostname", "ldap.realistic-looking-domain.com").
+        put("googleConnectorName", "x").
+        put("googleConnectorWorkDir",
+        "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF/connectors/ldapConnector/x").
+        put("schema_10", "dn").
+        put("username", "admin").
+        put("basedn", "ou=people,dc=example,dc=com").
+        put("googleWorkDir", "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF").
+        put("filter", "ou=people").
+        build();
 
-  private void doPositiveValidateConfig(
-          ImmutableMap<String, String> originalConfig,
-          ImmutableMap<String, String> expectedDefaults, ConfigureResponse cr) {
+    ImmutableMap<String, String> expectedDefaults =
+        ImmutableMap.<String, String> builder().
+        put("schema_key", "dn").
+        put("method", "STANDARD").
+        put("authtype", "ANONYMOUS").
+        put("port", "389").
+        build();
+
+    ConfigureResponse cr = lct.validateConfig(originalConfig, Locale.US, null);
+
+    doPositiveValidateConfig(originalConfig, expectedDefaults, cr);
+  }
+
+  private void doPositiveValidateConfig(ImmutableMap<String, String> originalConfig,
+      ImmutableMap<String, String> expectedDefaults, ConfigureResponse cr) {
     String formSnippet = cr.getFormSnippet();
     assertTrue(formSnippet == null || formSnippet.length() < 1);
     String message = cr.getMessage();
@@ -179,9 +223,9 @@ public class LdapConnectorTypeTest extends TestCase {
     assertReturnedConfigValidAndComplete(originalConfig, expectedDefaults, resultConfig);
   }
 
-  private void assertReturnedConfigValidAndComplete(
-          Map<String, String> originalConfig,
-          Map<String, String> expectedDefaults, Map<String, String> resultConfig) {
+  private void assertReturnedConfigValidAndComplete(Map<String, String> originalConfig,
+      Map<String, String> expectedDefaults,
+      Map<String, String> resultConfig) {
 
     Map<String, String> nonSchemaConfig = Maps.newHashMap(expectedDefaults);
 
@@ -208,27 +252,25 @@ public class LdapConnectorTypeTest extends TestCase {
         String schemaKey = v.trim();
         totalSchemaKeysFound++;
         if (schemaKey.length() < 1) {
-          // we need to add padding schema_xx keys to make sure all are
-          // specified
+          // we need to add padding schema_xx keys to make sure all are specified
           continue;
         }
-        assertTrue("Expected that result config contains \"" + schemaKey
-                + "\" for key " + key, selectedSchemaKeys.remove(schemaKey));
+        assertTrue("Expected that result config contains \"" + schemaKey + "\" for key " + key,
+            selectedSchemaKeys.remove(schemaKey));
       } else {
         // the key-value pair should match
         String originalValue = nonSchemaConfig.remove(key);
         if (originalValue == null) {
-          assertTrue("found unexpected key :\"" + key + "\" value:\"" + v
-                  + "\"", v.trim().length() < 1);
+          assertTrue("found unexpected key :\"" + key + "\" value:\"" + v +
+              "\"", v.trim().length() < 1);
         } else {
-          assertNotNull("returned config has key:\"" + key + "\" value:\"" + v
-                  + "\" missing in original", originalValue);
+          assertNotNull("returned config has key:\"" + key + "\" value:\"" + v +
+              "\" missing in original", originalValue);
           assertEquals("mismatch for key:\"" + key + "\"", originalValue, v);
         }
       }
     }
-    // we should have found all the keys - evidenced by having removed them all
-    // from the set
+    // we should have found all the keys - evidenced by having removed them all from the set
     assertEquals(0, selectedSchemaKeys.size());
     // we should have seen a key for each pseudo-key
     assertEquals(LdapConstants.MAX_SCHEMA_ELEMENTS, totalSchemaKeysFound);
@@ -239,7 +281,24 @@ public class LdapConnectorTypeTest extends TestCase {
     LdapConnectorType lct = new LdapConnectorType(basicMock);
     ResourceBundle b = lct.getResourceBundle(Locale.US);
 
-    ImmutableMap<String, String> originalConfig = ImmutableMap.<String, String> builder().put("googlePropertiesVersion", "3").put("authtype", "ANONYMOUS").put("hostname", "ldap.realistic-looking-domain.com").put("googleConnectorName", "x").put("googleConnectorWorkDir", "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF/connectors/ldapConnector/x").put("password", "test").put("schema_10", "dn").put("username", "admin").put("schema_9", "employeestatus").put("schema_8", "employeenumber").put("method", "STANDARD").put("basedn", "ou=people,dc=example,dc=com").put("googleWorkDir", "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF").put("filter", "ou=people").build();
+    ImmutableMap<String, String> originalConfig =
+        ImmutableMap.<String, String> builder().
+        put("googlePropertiesVersion", "3").
+        put("authtype", "ANONYMOUS").
+        put("hostname", "ldap.realistic-looking-domain.com").
+        put("googleConnectorName", "x").
+        put("googleConnectorWorkDir",
+        "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF/connectors/ldapConnector/x").
+        put("password", "test").
+        put("schema_10", "dn").
+        put("username", "admin").
+        put("schema_9", "employeestatus").
+        put("schema_8", "employeenumber").
+        put("method", "STANDARD").
+        put("basedn", "ou=people,dc=example,dc=com").
+        put("googleWorkDir", "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF").
+        put("filter", "ou=people").
+        build();
 
     ConfigureResponse cr = lct.getPopulatedConfigForm(originalConfig, Locale.US);
 
@@ -271,18 +330,15 @@ public class LdapConnectorTypeTest extends TestCase {
   }
 
   private void assertValueCorrectlyPreset(String p, String line, String value) {
-    String message = "should find key \"" + p + "\" preset to value \"" + value
-            + "\"";
+    String message = "should find key \"" + p + "\" preset to value \"" + value + "\"";
     if (line.contains("type=\"text\"")) {
-      assertTrue(message, line.contains("value=\""
-              + AbstractField.xmlEncodeAttributeValue(value) + "\""));
+      assertTrue(message, line.contains("value=\"" + AbstractField.xmlEncodeAttributeValue(value) + "\""));
     }
   }
 
   private static Pattern linePattern = Pattern.compile(".*\r?\n");
 
-  public static List<String> findMatchingLines(CharSequence sample,
-          String exactMatchString) {
+  public static List<String> findMatchingLines(CharSequence sample, String exactMatchString) {
     Pattern pattern = Pattern.compile(Pattern.quote(exactMatchString));
     Matcher lm = linePattern.matcher(sample); // Line matcher
     Matcher pm = null; // Pattern matcher
@@ -309,8 +365,7 @@ public class LdapConnectorTypeTest extends TestCase {
     return lines.get(0);
   }
 
-  public static String findFirstMatchingLine(String sample,
-          String exactMatchString) {
+  public static String findFirstMatchingLine(String sample, String exactMatchString) {
     List<String> lines = findMatchingLines(sample, exactMatchString);
     assertTrue(0 < lines.size());
     return lines.get(0);
