@@ -26,22 +26,23 @@ public class LdapConnectorConfigTest extends TestCase {
   public void testSimple() {
     ImmutableMap<String, String> configMap =
         ImmutableMap.<String, String> builder().
-        put(LdapConstants.ConfigName.AUTHTYPE.toString(), "ANONYMOUS").
-        put(LdapConstants.ConfigName.HOSTNAME.toString(), "ldap.realistic-looking-domain.com").
-        put(LdapConstants.ConfigName.METHOD.toString(), "STANDARD").
-        put(LdapConstants.ConfigName.BASEDN.toString(), "ou=people,dc=example,dc=com").
-        put(LdapConstants.ConfigName.FILTER.toString(), "ou=people").
-        put(LdapConstants.ConfigName.SCHEMA.toString() + "_0", "foo").
-        put(LdapConstants.ConfigName.SCHEMA.toString() + "_1", "bar").
-        put(LdapConstants.ConfigName.SCHEMA.toString() + "_7", "baz").
+        put(LdapConnectorConfig.ConfigName.AUTHTYPE.toString(), "ANONYMOUS").
+        put(LdapConnectorConfig.ConfigName.HOSTNAME.toString(), LdapHandlerTest.getHostname()).
+        put(LdapConnectorConfig.ConfigName.METHOD.toString(), "STANDARD").
+        put(LdapConnectorConfig.ConfigName.BASEDN.toString(),
+        LdapHandlerTest.getTestResourceBundle().getString("basedn")).
+        put(LdapConnectorConfig.ConfigName.FILTER.toString(), LdapHandlerTest.getTestFilter()).
+        put(LdapConnectorConfig.ConfigName.SCHEMA.toString() + "_0", "foo").
+        put(LdapConnectorConfig.ConfigName.SCHEMA.toString() + "_1", "bar").
+        put(LdapConnectorConfig.ConfigName.SCHEMA.toString() + "_7", "baz").
         build();
     LdapConnectorConfig ldapConnectorConfig = new LdapConnectorConfig(configMap);
     Set<String> schema = ldapConnectorConfig.getSchema();
     assertTrue(schema.contains("foo"));
     assertTrue(schema.contains("bar"));
     assertTrue(schema.contains("baz"));
-    assertEquals(LdapHandler.DN_ATTRIBUTE, ldapConnectorConfig.getSchemaKey());
-    assertTrue(schema.contains(LdapHandler.DN_ATTRIBUTE));
+    assertEquals("dn", ldapConnectorConfig.getSchemaKey());
+    assertTrue(schema.contains("dn"));
   }
 
   public void testBigSchema() {
@@ -51,26 +52,26 @@ public class LdapConnectorConfigTest extends TestCase {
     Builder<String, String> builder = ImmutableMap.<String, String> builder();
     builder.
         put("authtype", "ANONYMOUS").
-        put("hostname", "ldap.realistic-looking-domain.com").
+        put("hostname", LdapHandlerTest.getHostname()).
         put("method", "STANDARD").
-        put("basedn", "ou=people,dc=example,dc=com").
-        put("filter", "ou=people");
+        put("basedn", LdapHandlerTest.getTestResourceBundle().getString("basedn")).
+        put("filter", LdapHandlerTest.getTestFilter());
     int extraElements = 10;
-    for (int i = 0; i < LdapConstants.MAX_SCHEMA_ELEMENTS + extraElements; i++) {
-      String key = LdapConstants.ConfigName.SCHEMA.toString() + "_" + i;
+    for (int i = 0; i < LdapConnectorConfig.MAX_SCHEMA_ELEMENTS + extraElements; i++) {
+      String key = LdapConnectorConfig.ConfigName.SCHEMA.toString() + "_" + i;
       builder.put(key, key);
     }
     ImmutableMap<String, String> configMap = builder.build();
     LdapConnectorConfig ldapConnectorConfig = new LdapConnectorConfig(configMap);
     Set<String> schema = ldapConnectorConfig.getSchema();
-    assertEquals(LdapHandler.DN_ATTRIBUTE, ldapConnectorConfig.getSchemaKey());
-    assertTrue(schema.contains(LdapHandler.DN_ATTRIBUTE));
-    String lastExpectedSchemaKey = LdapConstants.ConfigName.SCHEMA.toString() + "_" +
-        (LdapConstants.MAX_SCHEMA_ELEMENTS - 1);
-    String expectedDroppedSchemaKey = LdapConstants.ConfigName.SCHEMA.toString() + "_" +
-        (LdapConstants.MAX_SCHEMA_ELEMENTS + extraElements - 1);
+    assertEquals("dn", ldapConnectorConfig.getSchemaKey());
+    assertTrue(schema.contains("dn"));
+    String lastExpectedSchemaKey = LdapConnectorConfig.ConfigName.SCHEMA.toString() + "_" +
+        (LdapConnectorConfig.MAX_SCHEMA_ELEMENTS - 1);
+    String expectedDroppedSchemaKey = LdapConnectorConfig.ConfigName.SCHEMA.toString() + "_" +
+        (LdapConnectorConfig.MAX_SCHEMA_ELEMENTS + extraElements - 1);
     assertTrue(schema.contains(lastExpectedSchemaKey));
     assertFalse(schema.contains(expectedDroppedSchemaKey));
-    assertEquals(LdapConstants.MAX_SCHEMA_ELEMENTS + 1, schema.size());
+    assertEquals(LdapConnectorConfig.MAX_SCHEMA_ELEMENTS + 1, schema.size());
   }
 }

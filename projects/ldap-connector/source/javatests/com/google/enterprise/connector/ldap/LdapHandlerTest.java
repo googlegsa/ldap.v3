@@ -16,28 +16,17 @@ package com.google.enterprise.connector.ldap;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.enterprise.connector.ldap.LdapConstants.LdapConnectionError;
-import com.google.enterprise.connector.ldap.LdapConstants.Method;
-import com.google.enterprise.connector.ldap.LdapHandler.LdapConnectionSettings;
+import com.google.enterprise.connector.ldap.LdapHandler.LdapConnection;
 import com.google.enterprise.connector.ldap.LdapHandler.LdapRule;
 import com.google.enterprise.connector.ldap.LdapHandler.LdapRule.Scope;
 
 import junit.framework.TestCase;
 
-import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.Map.Entry;
 
-import javax.naming.ldap.LdapContext;
-
-/**
- * Tests querying against LDAP.
- * Note: this test requires a live ldap connection (established through the
- * properties in LdapTesting.properties). Any test file that does not have this
- * comment at the top should run fine without a live ldap connection (with a
- * MockLdapHandler)
- */
 public class LdapHandlerTest extends TestCase {
 
   private static final String RESOURCE_BUNDLE_NAME =
@@ -59,69 +48,30 @@ public class LdapHandlerTest extends TestCase {
     TEST_SCHEMA_KEY = TEST_RESOURCE_BUNDLE.getString("schema_key");
   }
 
-  private static ResourceBundle getTestResourceBundle() {
+  public static ResourceBundle getTestResourceBundle() {
     return TEST_RESOURCE_BUNDLE;
   }
 
-  private static String getTestFilter() {
+  public static String getTestFilter() {
     return TEST_FILTER;
   }
 
-  private static String getHostname() {
+  public static String getHostname() {
     return TEST_HOSTNAME;
   }
 
-  private static Set<String> getSchema() {
+  public static Set<String> getSchema() {
     return Sets.newHashSet(TEST_SCHEMA);
   }
 
-  private static String getSchemaKey() {
+  public static String getSchemaKey() {
     return TEST_SCHEMA_KEY;
   }
 
-  public void testConnectivity() {
-    LdapHandler handler = new LdapHandler();
-    handler.setLdapConnectionSettings(makeLdapConnectionSettings());
-    LdapContext ldapContext = handler.getLdapContext();
-    assertNotNull(ldapContext);
-  }
-
-  private static LdapConnectionSettings makeLdapConnectionSettings() {
-    Method method = Method.STANDARD;
-    String hostname = LdapHandlerTest.getHostname();
-    int port = 389;
-    String baseDN = LdapHandlerTest.getTestResourceBundle().getString("basedn");
-    LdapConnectionSettings settings =
-        new LdapConnectionSettings(method, hostname, port, baseDN);
-    return settings;
-  }
-
-  public void testBadConnectivity() {
-    LdapHandler handler = new LdapHandler();
-    handler.setLdapConnectionSettings(makeInvalidLdapConnectionSettings());
-    LdapContext ldapContext = handler.getLdapContext();
-    assertNull(ldapContext);
-    Map<LdapConnectionError, String> errors = handler.getErrors();
-    for (LdapConnectionError e : errors.keySet()) {
-      System.out.println("Error " + e + " message: " + errors.get(e));
-    }
-  }
-
-  private static LdapConnectionSettings makeInvalidLdapConnectionSettings() {
-    Method method = Method.STANDARD;
-    String hostname = "not-ldap.xyzzy.foo";
-    int port = 389;
-    String baseDN = LdapHandlerTest.getTestResourceBundle().getString("basedn");
-    LdapConnectionSettings settings =
-        new LdapConnectionSettings(method, hostname, port, baseDN);
-    return settings;
-  }
-
-  private static LdapHandler makeLdapHandlerForTesting(Set<String> schema, int maxResults) {
+  public static LdapHandler makeLdapHandlerForTesting(Set<String> schema) {
     LdapRule ldapRule = makeSimpleLdapRule();
-    LdapHandler ldapHandler = new LdapHandler();
-    ldapHandler.setLdapConnectionSettings(makeLdapConnectionSettings());
-    ldapHandler.setQueryParameters(ldapRule, schema, getSchemaKey(), maxResults);
+    LdapConnection connection = LdapConnectionTest.makeLdapConnectionForTesting();
+    LdapHandler ldapHandler = new LdapHandler(connection, ldapRule, schema, getSchemaKey());
     return ldapHandler;
   }
 
@@ -132,39 +82,34 @@ public class LdapHandlerTest extends TestCase {
     return ldapRule;
   }
 
-  public void testSimpleQuery() {
+  public void testSimple() {
     // makes sure we can instantiate and execute something
-    LdapHandler ldapHandler = makeLdapHandlerForTesting(null, 0);
-    Map<String, Multimap<String, String>> mapOfMultimaps = ldapHandler.get();
-    System.out.println(mapOfMultimaps.size());
-    dump(mapOfMultimaps);
+    LdapHandler ldapHandler = makeLdapHandlerForTesting(null);
+    dump(ldapHandler.execute());
   }
 
-  public void testSpecifiedSchemaQuery() {
+  public void testSpecifiedSchema() {
     // this time with a schema
     Set<String> schema = getSchema();
     dumpSchema(schema);
-    LdapHandler ldapHandler = makeLdapHandlerForTesting(schema, 0);
-    Map<String, Multimap<String, String>> mapOfMultimaps = ldapHandler.get();
-    System.out.println(mapOfMultimaps.size());
-    dump(mapOfMultimaps);
+    LdapHandler ldapHandler = makeLdapHandlerForTesting(schema);
+    dump(ldapHandler.execute());
   }
 
-  public void testQueryTwice() {
+  public void testExecuteTwice() {
     Set<String> schema = getSchema();
     dumpSchema(schema);
-    LdapHandler ldapHandler = makeLdapHandlerForTesting(schema, 0);
-    Map<String, Multimap<String, String>> mapOfMultimaps = ldapHandler.get();
-    System.out.println("first time size: " + mapOfMultimaps.size());
+    LdapHandler ldapHandler = makeLdapHandlerForTesting(schema);
+    dump(ldapHandler.execute());
 
-    mapOfMultimaps = ldapHandler.get();
-    System.out.println("second time size: " + mapOfMultimaps.size());
-  }
-
-  public void testLimitedQuery() {
-    LdapHandler ldapHandler = makeLdapHandlerForTesting(null, 1);
-    Map<String, Multimap<String, String>> mapOfMultimaps = ldapHandler.get();
-    assertEquals(1,mapOfMultimaps.size());
+    boolean sawException;
+    try {
+      dump(ldapHandler.execute());
+      sawException = false;
+    } catch (RuntimeException e) {
+      sawException = true;
+    }
+    assertTrue(sawException);
   }
 
   private void dumpSchema(Set<String> schema) {
@@ -174,8 +119,8 @@ public class LdapHandlerTest extends TestCase {
     }
   }
 
-  private void dump(Map<String, Multimap<String, String>> mapOfMultimaps) {
-    for (Entry<String, Multimap<String, String>> entry : mapOfMultimaps.entrySet()) {
+  private void dump(SortedMap<String, Multimap<String, String>> execute) {
+    for (Entry<String, Multimap<String, String>> entry : execute.entrySet()) {
       String key = entry.getKey();
       Multimap<String, String> person = entry.getValue();
       System.out.println();

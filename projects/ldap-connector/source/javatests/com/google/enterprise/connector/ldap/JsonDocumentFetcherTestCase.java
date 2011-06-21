@@ -23,7 +23,7 @@ public abstract class JsonDocumentFetcherTestCase extends TestCase {
 
   public abstract JsonDocumentFetcher setJsonDocumentFetcher();
 
-  public void testInstantiation() {
+  public void testInstatiation() {
     JsonDocumentFetcher jdf = setJsonDocumentFetcher();
   }
 

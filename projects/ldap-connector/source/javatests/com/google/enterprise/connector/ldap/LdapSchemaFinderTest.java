@@ -14,34 +14,20 @@
 
 package com.google.enterprise.connector.ldap;
 
-import com.google.common.collect.Sets;
 import com.google.enterprise.connector.ldap.LdapSchemaFinder.SchemaResult;
-import com.google.enterprise.connector.ldap.MockLdapHandlers.SimpleMockLdapHandler;
 
 import junit.framework.TestCase;
 
-import java.util.Set;
-
 public class LdapSchemaFinderTest extends TestCase {
 
-  public void testBasic() {
-    SimpleMockLdapHandler ldapHandler = MockLdapHandlers.getBasicMock();
-    doBasicSchemaTest(ldapHandler);
-  }
-
-  private void doBasicSchemaTest(SimpleMockLdapHandler ldapHandler) {
+  // TODO: write some more serious tests
+  public void testSimple() {
+    LdapHandler ldapHandler = LdapHandlerTest.makeLdapHandlerForTesting(null);
     LdapSchemaFinder ldapSchemaFinder = new LdapSchemaFinder(ldapHandler);
     SchemaResult result = ldapSchemaFinder.find(100);
-    Set<String> schema = Sets.newHashSet(result.getSchema().keySet());
-    for (String schemaKey: ldapHandler.getSchemaKeys()) {
-      assertTrue("Should find schema key: \"" + schemaKey + "\"",
-          schema.remove(schemaKey));
+    for (String attrname: result.getSchema().keySet()) {
+      System.out.println(attrname);
     }
-    assertEquals("some schema keys not found", 0, schema.size());
   }
 
-  public void testBigger() {
-    SimpleMockLdapHandler ldapHandler = MockLdapHandlers.getBigMock();
-    doBasicSchemaTest(ldapHandler);
-  }
 }

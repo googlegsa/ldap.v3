@@ -21,11 +21,8 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.enterprise.connector.ldap.LdapConstants.AuthType;
-import com.google.enterprise.connector.ldap.LdapConstants.ErrorMessages;
-import com.google.enterprise.connector.ldap.LdapConstants.LdapConnectionError;
-import com.google.enterprise.connector.ldap.LdapConstants.Method;
-import com.google.enterprise.connector.ldap.LdapConstants.ServerType;
+import com.google.enterprise.connector.ldap.LdapHandler.LdapConnectionSettings.AuthType;
+import com.google.enterprise.connector.ldap.LdapHandler.LdapConnectionSettings.Method;
 
 import java.io.IOException;
 import java.util.Hashtable;
@@ -37,7 +34,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.naming.AuthenticationNotSupportedException;
-import javax.naming.CommunicationException;
 import javax.naming.Context;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
@@ -60,7 +56,7 @@ import javax.naming.ldap.Rdn;
  * exceptions are wrapped in RuntimeException, so callers need to be careful to
  * catch RuntimeException.
  */
-public class LdapHandler implements LdapHandlerI {
+public class LdapHandler {
   /**
    * Every object in LDAP has a "distinguished name" (DN). jndi does not treat
    * DN as an attribute, but we do. DN will always be present and will always be
@@ -70,71 +66,31 @@ public class LdapHandler implements LdapHandlerI {
 
   private static Logger LOG = Logger.getLogger(LdapHandler.class.getName());
 
-  private LdapConnectionSettings ldapConnectionSettings = null;
-  private String schemaKey = null;
-  private Set<String> schema = null;
-  private LdapRule rule = null;
-  private int maxResults = 0;
-
-  private LdapConnection connection = null;
+  private final LdapConnection connection;
+  private final String schemaKey;
+  private final Set<String> schema;
+  private final LdapRule rule;
 
   private static Function<String, String> toLower = new Function<String, String>() {
-    /* @Override */
+    @Override
     public String apply(String s) {
       return s.toLowerCase();
     }
   };
 
-  public LdapHandler() {
-  }
-
-  public void setQueryParameters(LdapRule rule, Set<String> schema, String schemaKey, int maxResults) {
+  /**
+   * Sole constructor
+   */
+  public LdapHandler(LdapConnection connection, LdapRule rule,
+      Set<String> schema, String schemaKey) {
     this.rule = rule;
     this.schemaKey = schemaKey;
+    this.connection = connection;
     if (schema == null) {
       this.schema = null;
     } else {
       this.schema = Sets.newHashSet(Collections2.transform(schema, toLower));
     }
-    this.maxResults = maxResults;
-  }
-
-  /* @Override */
-  public void setLdapConnectionSettings(LdapConnectionSettings ldapConnectionSettings) {
-    this.ldapConnectionSettings = ldapConnectionSettings;
-    LOG.fine("settings " + this.ldapConnectionSettings);
-    connection = new LdapConnection(ldapConnectionSettings);
-  }
-
-  /* @Override */
-  public Map<LdapConnectionError, String> getErrors() {
-    if (connection != null) {
-      return connection.getErrors();
-    }
-    throw new IllegalStateException("Must successfully set connection config before getting error state");
-  }
-
-  /**
-   * Convenience routine for setting up an LdapHandler from an LdapConnectorConfig.
-   * This is expected to be called by Spring, for a production instance.
-   */
-  public static LdapHandlerI makeLdapHandlerFromConfig(LdapConnectorConfig ldapConnectorConfig) {
-    LOG.fine("ldapConnectorConfig: " + ldapConnectorConfig);
-    LdapHandlerI ldapHandler = new LdapHandler();
-    LOG.fine("ldapHandler: " + ldapHandler);
-    LdapConnectionSettings settings = ldapConnectorConfig.getSettings();
-    LOG.fine("settings: " + settings);
-    ldapHandler.setLdapConnectionSettings(settings);
-    LdapRule rule = ldapConnectorConfig.getRule();
-    Set<String> schema = ldapConnectorConfig.getSchema();
-    String schemaKey = ldapConnectorConfig.getSchemaKey();
-    ldapHandler.setQueryParameters(rule, schema, schemaKey, 0);
-    return ldapHandler;
-  }
-
-  @VisibleForTesting
-  LdapContext getLdapContext() {
-    return connection.getLdapContext();
   }
 
   /**
@@ -142,35 +98,19 @@ public class LdapHandler implements LdapHandlerI {
    * Note: execute should only be called once. To execute again, create a new
    * LdapHandler and execute that.
    *
-   * @return a Map of results. The map is sorted by the schemaKey
+   * @return a SortedMap or results. The map is sorted by the schemaKey
    *         specified in the constructor. Each result is a Multimap of Strings
    *         to Strings, keyed by attributes in the schema. Results are
    *         Multimaps because ldap can store multiple values with an attribute,
    *         although in practice this is rare (except for a few attributes,
    *         like email aliases).
    */
-  public Map<String, Multimap<String, String>> get() {
-
-    LOG.fine("entering get " + ldapConnectionSettings);
-
-    if (ldapConnectionSettings == null) {
-      throw new IllegalStateException("Must successfully set LdapConnectionSettings before get");
-    }
-
-    connection = new LdapConnection(ldapConnectionSettings);
-
-    LOG.fine("connection:" + connection);
+  public SortedMap<String, Multimap<String, String>> execute() {
 
     SortedMap<String, Multimap<String, String>> result =
         new TreeMap<String, Multimap<String, String>>();
 
     LdapContext ctx = connection.getLdapContext();
-
-    LOG.fine("ctx:" + ctx);
-
-    if (ctx == null) {
-      throw new IllegalStateException(ErrorMessages.UNKNOWN_CONNECTION_ERROR.toString());
-    }
 
     NamingEnumeration<SearchResult> ldapResults = null;
     int resultCount = 0;
@@ -211,9 +151,6 @@ public class LdapHandler implements LdapHandlerI {
           } else {
             result.put(keyValue, thisResult);
           }
-          if (maxResults > 0 && resultCount >= maxResults) {
-            break;
-          }
         }
 
         if (LOG.isLoggable(Level.INFO)) {
@@ -240,14 +177,12 @@ public class LdapHandler implements LdapHandlerI {
         ctx.setRequestControls(new Control[] {new PagedResultsControl(LdapConnection.PAGESIZE,
             cookie, Control.NONCRITICAL)});
       } while (!shouldStop(cookie));
-    } catch (CommunicationException e) {
-      throw new IllegalStateException(e);
     } catch (NameNotFoundException e) {
-      throw new IllegalStateException(e);
+      throw new RuntimeException(e);
     } catch (NamingException e) {
-      throw new IllegalStateException(e);
+      throw new RuntimeException(e);
     } catch (IOException e) {
-      throw new IllegalStateException(e);
+      throw new RuntimeException(e);
     } finally {
       // Clean up everything.
       if (ldapResults != null) {
@@ -264,7 +199,6 @@ public class LdapHandler implements LdapHandlerI {
           LOG.log(Level.WARNING, "ldap_connection_cleanup_error_on_context", e);
         }
       }
-      connection = null;
     }
     LOG.info("ldap search final result count " + resultCount);
     return result;
@@ -364,10 +298,16 @@ public class LdapHandler implements LdapHandlerI {
   /**
    * A connection to an Ldap Server
    */
-  private static class LdapConnection {
+  public static class LdapConnection {
 
     private static final String COM_SUN_JNDI_LDAP_LDAP_CTX_FACTORY =
         "com.sun.jndi.ldap.LdapCtxFactory";
+
+    public enum LdapConnectionError {
+      AuthenticationNotSupported,
+      NamingException,
+      IOException,
+    }
 
     private final LdapConnectionSettings settings;
     private LdapContext ldapContext = null;
@@ -376,14 +316,14 @@ public class LdapHandler implements LdapHandlerI {
     public static final int PAGESIZE = 1000;
 
     public LdapConnection(LdapConnectionSettings ldapConnectionSettings) {
-      LOG.fine("Configuring LdapConnection with settings: " + ldapConnectionSettings);
       this.settings = ldapConnectionSettings;
       this.errors = Maps.newHashMap();
       Hashtable<String, String> env = configureLdapEnvironment();
       ldapContext = makeContext(env, PAGESIZE);
     }
 
-    public LdapContext getLdapContext() {
+    @VisibleForTesting
+    LdapContext getLdapContext() {
       return ldapContext;
     }
 
@@ -395,8 +335,6 @@ public class LdapHandler implements LdapHandlerI {
       LdapContext ctx = null;
       try {
         ctx = new InitialLdapContext(env, null);
-      } catch (CommunicationException e) {
-        errors.put(LdapConnectionError.CommunicationException, e.getMessage());
       } catch (AuthenticationNotSupportedException e) {
         errors.put(LdapConnectionError.AuthenticationNotSupported, e.getMessage());
       } catch (NamingException e) {
@@ -494,15 +432,26 @@ public class LdapHandler implements LdapHandlerI {
    * Configuration for an ldap connection. Immutable, static data class.
    */
   public static class LdapConnectionSettings {
+    public enum AuthType {
+      ANONYMOUS, SIMPLE
+    }
+
+    public enum Method {
+      STANDARD, SSL
+    }
+
+    public enum ServerType {
+      ACTIVE_DIRECTORY, DOMINO, OPENLDAP, GENERIC
+    }
 
     private final String hostname;
     private final int port;
-    private final AuthType authType;
+    private final LdapConnectionSettings.AuthType authType;
     private final String username;
     private final String password;
-    private final Method connectMethod;
+    private final LdapConnectionSettings.Method connectMethod;
     private final String baseDN;
-    private final ServerType serverType;
+    private final LdapConnectionSettings.ServerType serverType;
 
     public LdapConnectionSettings(Method connectMethod, String hostname,
         int port, String baseDN, AuthType authType, String username, String password) {
@@ -528,23 +477,7 @@ public class LdapHandler implements LdapHandlerI {
       this.username = null;
     }
 
-    @Override
-    public String toString() {
-      String displayPassword;
-      if (password == null) {
-        displayPassword = "null";
-      } else if (password.length() < 1) {
-        displayPassword = "<empty>";
-      } else {
-        displayPassword = "####";
-      }
-      return "LdapConnectionSettings [authType=" + authType + ", baseDN=" + baseDN
-          + ", connectMethod=" + connectMethod + ", hostname=" + hostname + ", password="
-          + displayPassword + ", port=" + port + ", serverType=" + serverType + ", username=" + username
-          + "]";
-    }
-
-    public AuthType getAuthType() {
+    public LdapConnectionSettings.AuthType getAuthType() {
       return authType;
     }
 
@@ -552,7 +485,7 @@ public class LdapHandler implements LdapHandlerI {
       return baseDN;
     }
 
-    public Method getConnectMethod() {
+    public LdapConnectionSettings.Method getConnectMethod() {
       return connectMethod;
     }
 
@@ -568,7 +501,7 @@ public class LdapHandler implements LdapHandlerI {
       return port;
     }
 
-    public ServerType getServerType() {
+    public LdapConnectionSettings.ServerType getServerType() {
       return serverType;
     }
 

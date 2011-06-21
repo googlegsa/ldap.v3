@@ -15,11 +15,10 @@
 package com.google.enterprise.connector.ldap;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.enterprise.connector.ldap.LdapConstants.AuthType;
-import com.google.enterprise.connector.ldap.LdapConstants.ConfigName;
-import com.google.enterprise.connector.ldap.LdapConstants.Method;
 import com.google.enterprise.connector.ldap.LdapHandler.LdapConnectionSettings;
 import com.google.enterprise.connector.ldap.LdapHandler.LdapRule;
+import com.google.enterprise.connector.ldap.LdapHandler.LdapConnectionSettings.AuthType;
+import com.google.enterprise.connector.ldap.LdapHandler.LdapConnectionSettings.Method;
 import com.google.enterprise.connector.ldap.LdapHandler.LdapRule.Scope;
 
 import java.util.Map;
@@ -38,6 +37,32 @@ import java.util.logging.Logger;
 public class LdapConnectorConfig {
 
   public static final Logger LOG = Logger.getLogger(LdapConnectorConfig.class.getName());
+
+  public enum ConfigName {
+    HOSTNAME("hostname"),
+    PORT("port"),
+    AUTHTYPE("authtype"),
+    USERNAME("username"),
+    PASSWORD("password"),
+    METHOD("method"),
+    BASEDN("basedn"),
+    FILTER("filter"),
+    SCHEMA("schema"),
+    SCHEMA_KEY("schema_key"), ;
+
+    private final String tag;
+
+    private ConfigName(String tag) {
+      this.tag = tag;
+    }
+
+    @Override
+    public String toString() {
+      return tag;
+    }
+  }
+
+  public static final int MAX_SCHEMA_ELEMENTS = 100;
 
   private final String hostname;
   private final int port;
@@ -74,13 +99,7 @@ public class LdapConnectorConfig {
     String portString = getTrimmedValueFromConfig(config, ConfigName.PORT);
     String authtypeString = getTrimmedValueFromConfig(config, ConfigName.AUTHTYPE);
     String username = getTrimmedValueFromConfig(config, ConfigName.USERNAME);
-    if(username == null) {
-      username = "";
-    }
     String password = getTrimmedValueFromConfig(config, ConfigName.PASSWORD);
-    if(password == null) {
-      password = "";
-    }    
     String methodString = getTrimmedValueFromConfig(config, ConfigName.METHOD);
     String basedn = getTrimmedValueFromConfig(config, ConfigName.BASEDN);
     String filter = getTrimmedValueFromConfig(config, ConfigName.FILTER);
@@ -88,7 +107,7 @@ public class LdapConnectorConfig {
 
     Set<String> tempSchema = new TreeSet<String>();
 
-    for (int i = 0; i < LdapConstants.MAX_SCHEMA_ELEMENTS; i++) {
+    for (int i = 0; i < MAX_SCHEMA_ELEMENTS; i++) {
       String pseudoKey = ConfigName.SCHEMA.toString() + "_" + i;
       String attributeName = getTrimmedValue(config.get(pseudoKey));
       if (attributeName != null) {
@@ -97,7 +116,7 @@ public class LdapConnectorConfig {
     }
 
     if (schemaKey == null || schemaKey.length() < 1) {
-      schemaKey = LdapHandler.DN_ATTRIBUTE;
+      schemaKey = "dn";
     }
 
     /**
@@ -118,7 +137,6 @@ public class LdapConnectorConfig {
     try {
       p = Integer.valueOf(portString);
     } catch (NumberFormatException e) {
-      LOG.warning("Found illegal port value: " + portString + " defaulting to 389");
       p = 389;
     }
     this.port = p;
@@ -156,10 +174,7 @@ public class LdapConnectorConfig {
     this.settings =
         new LdapConnectionSettings(this.method, this.hostname, this.port, this.basedn,
         this.authtype, this.username, this.password);
-    LOG.fine("this.settings: " + this.settings);
-
-    // only create an LdapRule if one was supplied
-    this.rule = (this.filter == null) ? null : new LdapRule(Scope.SUBTREE, this.filter);
+    this.rule = new LdapRule(Scope.SUBTREE, this.filter);
   }
 
   private String getTrimmedValueFromConfig(Map<String, String> config, ConfigName name) {
