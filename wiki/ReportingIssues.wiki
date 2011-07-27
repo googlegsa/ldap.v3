@@ -1,0 +1,13 @@
+#summary Reporting Issues with the Google Search Appliance Connector for LDAP
+#labels Phase-Support
+
+
+For customers who qualify for enterprise-level support, Google
+provides support for the Google Search Appliance Connectors. You can
+go to [http://www.google.com/support/enterprise/go/gsa_support] for
+instructions on how to contact Google Enterprise Support.
+
+For unsupported issues, such as using the connectors without a Google Search
+Appliance, working with the source code, or to report problems with
+unsupported development builds, you can send email to
+[mailto:google-enterprise-connectors-feedback@googlegroups.com google-enterprise-connectors-feedback@googlegroups.com]. Google may not respond to every message.
