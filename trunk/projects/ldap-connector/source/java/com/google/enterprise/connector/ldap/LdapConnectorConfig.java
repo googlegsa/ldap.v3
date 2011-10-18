@@ -22,10 +22,15 @@ import com.google.enterprise.connector.ldap.LdapHandler.LdapConnectionSettings;
 import com.google.enterprise.connector.ldap.LdapHandler.LdapRule;
 import com.google.enterprise.connector.ldap.LdapHandler.LdapRule.Scope;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An encapsulation of all the config needed for a working Ldap Connector
@@ -85,21 +90,14 @@ public class LdapConnectorConfig {
     String basedn = getTrimmedValueFromConfig(config, ConfigName.BASEDN);
     String filter = getTrimmedValueFromConfig(config, ConfigName.FILTER);
     String schemaKey = getTrimmedValueFromConfig(config, ConfigName.SCHEMA_KEY);
-
-    Set<String> tempSchema = new TreeSet<String>();
-
-    for (int i = 0; i < LdapConstants.MAX_SCHEMA_ELEMENTS; i++) {
-      String pseudoKey = ConfigName.SCHEMA.toString() + "_" + i;
-      String attributeName = getTrimmedValue(config.get(pseudoKey));
-      if (attributeName != null) {
-        tempSchema.add(attributeName);
-      }
-    }
-
-    if (schemaKey == null || schemaKey.length() < 1) {
+    //Since we removed this attribute from UI in 2.6.4 we need to add 
+    //a default value here.
+    if (schemaKey == null) {
       schemaKey = LdapHandler.DN_ATTRIBUTE;
     }
-
+    Set<String> tempSchema = new TreeSet<String>();
+    addSchemaFromConfig(config, tempSchema);
+    
     /**
      * Note: if the schema is not empty (at least one schema_xx keys was
      * specified in the config)
@@ -160,6 +158,30 @@ public class LdapConnectorConfig {
 
     // only create an LdapRule if one was supplied
     this.rule = (this.filter == null) ? null : new LdapRule(Scope.SUBTREE, this.filter);
+  }
+
+  /**
+   * Gets the attribute which has the appended schema attributes and splits them
+   * to add individual items in the provided set.
+   * @param config Config of user entered entries
+   * @param tempSchema Set which holds the schema attributes.
+   */
+  private void addSchemaFromConfig(Map<String, String> config,
+      Set<String> tempSchema) {
+   
+    String schemaValues = getJsonStringForSelectedAttributes(config);
+    if (schemaValues != null && schemaValues.trim().length() != 0) {
+      JSONArray arr;
+      try {
+        arr = new JSONArray(schemaValues);
+        for (int i = 0; i < arr.length(); i++) {
+          tempSchema.add(arr.getString(i));
+        }
+      } catch (JSONException e) {
+        LOG.warning("Did not get any selected attributes...");
+      }
+    }
+    LOG.fine("Selected attributes: " + tempSchema);
   }
 
   private String getTrimmedValueFromConfig(Map<String, String> config, ConfigName name) {
@@ -225,4 +247,44 @@ public class LdapConnectorConfig {
   public String getSchemaKey() {
     return schemaKey;
   }
+  
+  /**
+   * Returns the string that represents the selected attributes in a json
+   * understandable way. 
+   * First tries to search if the json string is passed by the config. If it is
+   * not found then we try to create the json string from original LDAP
+   * configuration format.  The original format is individual keys for 
+   * each value.
+   * @return String json parsable string representation of the selected 
+   *         attributes 
+   */
+  static String getJsonStringForSelectedAttributes(
+      Map <String, String> config) {
+    String schemaValue = config.get(ConfigName.SCHEMAVALUE.toString());
+    if (schemaValue == null || schemaValue.trim().length() == 0) {
+      LOG.info("Trying to recover attributes from individual checkboxes");
+      StringBuffer schemaKey = new StringBuffer();
+      schemaKey.append(ConfigName.SCHEMA.toString()).append("_").append("\\d");
+      Pattern keyPattern = Pattern.compile(schemaKey.toString());
+      Set<String> configKeySet = config.keySet();
+      JSONArray arr = new JSONArray();
+      for (String configKey: configKeySet) {
+        Matcher matcher = keyPattern.matcher(configKey);
+        if (matcher.find()) {
+          String schemaAttribute = config.get(configKey);
+          if (schemaAttribute != null && schemaAttribute.trim().length() != 0) {
+            arr.put(config.get(configKey));
+          }
+        }
+      }
+      if (arr.length() != 0) {
+        schemaValue = arr.toString();
+      } else {
+        schemaValue = "";
+      }
+    }
+    LOG.info("The appended string for selected attributes is: " + schemaValue);
+    return schemaValue;
+  }
+
 }

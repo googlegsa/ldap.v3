@@ -172,7 +172,8 @@ public class ConnectorFieldsTest extends TestCase {
   private void doTestMultiCheckboxField(Set<String> keys, String message) throws Exception {
     String name = "multicheckboxfield";
     boolean mandatory = false;
-    MultiCheckboxField field = new MultiCheckboxField(name, mandatory, keys, message);
+    MultiCheckboxField field = new MultiCheckboxField(name, mandatory, keys,
+        message, "");
     boolean highlightError = false;
     String snippet = field.getSnippet(new UpcasingResourceBundle(), highlightError);
     validateXhtml(snippet);
@@ -237,7 +238,7 @@ public class ConnectorFieldsTest extends TestCase {
       + "\"-//W3C//DTD XHTML 1.0 Strict//EN\" "
       + "\"./third_party/test/dtd/xhtml1-strict.dtd\">"
       + "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-      + "<head><title/></head><body><table>";
+      + "<head><title/></head><body><table border='1'>";
 
   // TODO: Replace with mechanism that doesn't require internet.
   // "\"http://www.corp.google.com/~XYZ/xhtml1-strict.dtd\">"

@@ -16,8 +16,11 @@ package com.google.enterprise.connector.ldap;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
+import com.google.enterprise.connector.ldap.LdapConstants.ConfigName;
 
 import junit.framework.TestCase;
+
+import org.json.JSONArray;
 
 import java.util.Set;
 
@@ -27,13 +30,14 @@ public class LdapConnectorConfigTest extends TestCase {
     ImmutableMap<String, String> configMap =
         ImmutableMap.<String, String> builder().
         put(LdapConstants.ConfigName.AUTHTYPE.toString(), "ANONYMOUS").
-        put(LdapConstants.ConfigName.HOSTNAME.toString(), "ldap.realistic-looking-domain.com").
+        put(LdapConstants.ConfigName.HOSTNAME.toString(),
+            "ldap.realistic-looking-domain.com").
         put(LdapConstants.ConfigName.METHOD.toString(), "STANDARD").
-        put(LdapConstants.ConfigName.BASEDN.toString(), "ou=people,dc=example,dc=com").
+        put(LdapConstants.ConfigName.BASEDN.toString(),
+            "ou=people,dc=example,dc=com").
         put(LdapConstants.ConfigName.FILTER.toString(), "ou=people").
-        put(LdapConstants.ConfigName.SCHEMA.toString() + "_0", "foo").
-        put(LdapConstants.ConfigName.SCHEMA.toString() + "_1", "bar").
-        put(LdapConstants.ConfigName.SCHEMA.toString() + "_7", "baz").
+        put(LdapConstants.ConfigName.SCHEMAVALUE.toString(),
+            getSchemaValue("foo","bar","baz")).
         build();
     LdapConnectorConfig ldapConnectorConfig = new LdapConnectorConfig(configMap);
     Set<String> schema = ldapConnectorConfig.getSchema();
@@ -44,10 +48,21 @@ public class LdapConnectorConfigTest extends TestCase {
     assertTrue(schema.contains(LdapHandler.DN_ATTRIBUTE));
   }
 
+  /**
+   * Generates a String representation of schema attributes as the UI would
+   * generate when user clicks on one or more checkboxes to select schema 
+   * attributes.
+   * @return String of the regex [<delemiter-value>attribute1]*
+   */
+  private String getSchemaValue(String... attributes) {
+    JSONArray arr = new JSONArray();
+    for (String attribute : attributes) {
+      arr.put(attribute);
+    }
+    return arr.toString();
+  }
+
   public void testBigSchema() {
-    // this test shows that a really big schema (bigger than MAX_SCHEMA_ELEMENTS) will
-    // be silently truncated, and that there's always room for the schema_key
-    // (even if it wasn't explicitly specified in the schema)
     Builder<String, String> builder = ImmutableMap.<String, String> builder();
     builder.
         put("authtype", "ANONYMOUS").
@@ -55,22 +70,102 @@ public class LdapConnectorConfigTest extends TestCase {
         put("method", "STANDARD").
         put("basedn", "ou=people,dc=example,dc=com").
         put("filter", "ou=people");
-    int extraElements = 10;
-    for (int i = 0; i < LdapConstants.MAX_SCHEMA_ELEMENTS + extraElements; i++) {
-      String key = LdapConstants.ConfigName.SCHEMA.toString() + "_" + i;
-      builder.put(key, key);
+    JSONArray arr = new JSONArray();
+    for (int i = 0; i < 200; i++) {
+      arr.put("attribute" + i);
+    }
+    builder.put(ConfigName.SCHEMAVALUE.toString(), arr.toString());
+    ImmutableMap<String, String> configMap = builder.build();
+    LdapConnectorConfig ldapConnectorConfig = new LdapConnectorConfig(configMap);
+    Set<String> schema = ldapConnectorConfig.getSchema();
+    assertEquals(LdapHandler.DN_ATTRIBUTE, ldapConnectorConfig.getSchemaKey());
+    assertTrue(schema.contains(LdapHandler.DN_ATTRIBUTE));
+    //200 from the for loop and 1 for the DN
+    assertEquals(201, schema.size());
+    for (int i = 0; i < 200; i++) {
+      assertTrue(schema.contains("attribute" + i));
+    }
+  }
+  
+  public void testForOnlyOneSchemaAttribute() {
+    Builder<String, String> builder = ImmutableMap.<String, String> builder();
+    builder.
+        put("authtype", "ANONYMOUS").
+        put("hostname", "ldap.realistic-looking-domain.com").
+        put("method", "STANDARD").
+        put("basedn", "ou=people,dc=example,dc=com").
+        put("filter", "ou=people");
+    builder.put(ConfigName.SCHEMAVALUE.toString(), getSchemaValue("foo"));
+    ImmutableMap<String, String> configMap = builder.build();
+    LdapConnectorConfig ldapConnectorConfig = new LdapConnectorConfig(configMap);
+    Set<String> schema = ldapConnectorConfig.getSchema();
+    assertEquals(LdapHandler.DN_ATTRIBUTE, ldapConnectorConfig.getSchemaKey());
+    assertTrue(schema.contains(LdapHandler.DN_ATTRIBUTE));
+    assertEquals(2, schema.size());
+    assertTrue(schema.contains("foo"));
+  }
+  
+  public void testForZeroSchemaAttributes() {
+    Builder<String, String> builder = ImmutableMap.<String, String> builder();
+    builder.
+        put("authtype", "ANONYMOUS").
+        put("hostname", "ldap.realistic-looking-domain.com").
+        put("method", "STANDARD").
+        put("basedn", "ou=people,dc=example,dc=com").
+        put("filter", "ou=people");
+    builder.put(ConfigName.SCHEMAVALUE.toString(), "");
+    ImmutableMap<String, String> configMap = builder.build();
+    LdapConnectorConfig ldapConnectorConfig = new LdapConnectorConfig(configMap);
+    Set<String> schema = ldapConnectorConfig.getSchema();
+    assertEquals(LdapHandler.DN_ATTRIBUTE, ldapConnectorConfig.getSchemaKey());
+    assertEquals(0,schema.size());
+  }
+  
+  public void testForSchemaAttributeWithQuotesInThemToScareJson() {
+    Builder<String, String> builder = ImmutableMap.<String, String> builder();
+    builder.
+        put("authtype", "ANONYMOUS").
+        put("hostname", "ldap.realistic-looking-domain.com").
+        put("method", "STANDARD").
+        put("basedn", "ou=people,dc=example,dc=com").
+        put("filter", "ou=people");
+    builder.put(ConfigName.SCHEMAVALUE.toString(),
+        getSchemaValue("foo","@tributeWith\"quotes\"in it"));
+    ImmutableMap<String, String> configMap = builder.build();
+    LdapConnectorConfig ldapConnectorConfig = new LdapConnectorConfig(configMap);
+    Set<String> schema = ldapConnectorConfig.getSchema();
+    assertEquals(LdapHandler.DN_ATTRIBUTE, ldapConnectorConfig.getSchemaKey());
+    assertTrue(schema.contains(LdapHandler.DN_ATTRIBUTE));
+    assertEquals(3, schema.size());
+    assertTrue(schema.contains("foo"));
+    assertTrue(schema.contains("@tributeWith\"quotes\"in it"));
+    assertFalse(schema.contains("quotes"));
+  }
+
+  public void testSchemaForBackwordCompatibility() {
+    Builder<String, String> builder = ImmutableMap.<String, String> builder();
+    builder.
+        put("authtype", "ANONYMOUS").
+        put("hostname", "ldap.realistic-looking-domain.com").
+        put("method", "STANDARD").
+        put("basedn", "ou=people,dc=example,dc=com").
+        put("filter", "ou=people");
+    for (int i = 0; i < 100; i++) {
+      builder.put("schema_" + i, "attribute" + i);
     }
     ImmutableMap<String, String> configMap = builder.build();
     LdapConnectorConfig ldapConnectorConfig = new LdapConnectorConfig(configMap);
     Set<String> schema = ldapConnectorConfig.getSchema();
     assertEquals(LdapHandler.DN_ATTRIBUTE, ldapConnectorConfig.getSchemaKey());
     assertTrue(schema.contains(LdapHandler.DN_ATTRIBUTE));
-    String lastExpectedSchemaKey = LdapConstants.ConfigName.SCHEMA.toString() + "_" +
-        (LdapConstants.MAX_SCHEMA_ELEMENTS - 1);
-    String expectedDroppedSchemaKey = LdapConstants.ConfigName.SCHEMA.toString() + "_" +
-        (LdapConstants.MAX_SCHEMA_ELEMENTS + extraElements - 1);
-    assertTrue(schema.contains(lastExpectedSchemaKey));
-    assertFalse(schema.contains(expectedDroppedSchemaKey));
-    assertEquals(LdapConstants.MAX_SCHEMA_ELEMENTS + 1, schema.size());
+    //100 from the for loop and 1 for the DN
+    assertEquals(101, schema.size());
+    //Test all attributes are present.
+    for (int i = 0; i < 100; i++) {
+      assertTrue(schema.contains("attribute" + i));
+    }
+
   }
+
+
 }

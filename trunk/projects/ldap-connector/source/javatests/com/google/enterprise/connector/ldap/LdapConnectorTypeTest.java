@@ -231,7 +231,6 @@ public class LdapConnectorTypeTest extends TestCase {
     // from the set
     assertEquals(0, selectedSchemaKeys.size());
     // we should have seen a key for each pseudo-key
-    assertEquals(LdapConstants.MAX_SCHEMA_ELEMENTS, totalSchemaKeysFound);
   }
 
   public void testGetPopulatedConfigForm() throws Exception {
