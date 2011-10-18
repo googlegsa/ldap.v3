@@ -363,13 +363,16 @@ public class ConnectorFields {
     private SortedSet<String> selectedKeys;
     private SortedSet<String> keys;
     private final String message;
+    private String onclickFunctionCall;
 
-    public MultiCheckboxField(String name, boolean mandatory, Set<String> keys, String message) {
+    public MultiCheckboxField(String name, boolean mandatory, Set<String> keys,
+        String message, String onclickFunctionCall) {
       super(name, mandatory);
       setKeys(keys);
       setSelectedKeys(null);
       this.message = message;
       this.renderLabelTag = false;
+      this.onclickFunctionCall = onclickFunctionCall;
     }
 
     private void makeSingleCheckboxHtml(StringBuffer sb, String boxname, String key,
@@ -377,11 +380,15 @@ public class ConnectorFields {
       sb.append("<input type=\"checkbox\" name=\"");
       sb.append(boxname);
       sb.append("\" value=\"");
-      sb.append(key);
-      if (selected) {
-        sb.append("\" checked=\"checked");
+      sb.append(key).append("\"");
+      if (onclickFunctionCall != null &&
+          onclickFunctionCall.trim().length()!=0) {
+        sb.append(" onclick='").append(onclickFunctionCall).append("'");
       }
-      sb.append("\"/> ");
+      if (selected) {
+        sb.append(" checked=\"checked\"");
+      }
+      sb.append("/> ");
       sb.append(key);
     }
 

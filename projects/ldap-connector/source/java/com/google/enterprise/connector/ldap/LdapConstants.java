@@ -39,6 +39,7 @@ public class LdapConstants {
     BASEDN("basedn"),
     FILTER("filter"),
     SCHEMA("schema"),
+    SCHEMAVALUE("schemavalue"),
     SCHEMA_KEY("schema_key"), ;
 
     private final String tag;
