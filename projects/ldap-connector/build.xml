@@ -16,6 +16,9 @@
   <property name="classes-prod.dir" value="${build-prod.dir}/classes" />
   <property name="classes-tests.dir" value="${build-tests.dir}/classes" />
 
+  <property name="connector-manager-projects.dir"
+            location="../../../cmgr/projects/" />
+
   <property name="connector-manager.dir"
             location="${connector-manager-projects.dir}/connector-manager" />
   <property name="spi.jar.dir" value="${connector-manager.dir}/dist/jarfile" />
