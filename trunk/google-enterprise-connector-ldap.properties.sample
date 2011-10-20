@@ -1,0 +1,10 @@
+## 
+# These properties are specific to the individual's development and
+# test environment. This properties file should be located in your
+# home directory, e.g.: ~/google-enterprise-connector-ldap.properties
+
+## 
+# Build Properties
+
+# The projects directory of the google-enterprise-connector-manager tree
+connector-manager-projects.dir = ${user.home}/gsa/google-enterprise-connector-manager/projects
