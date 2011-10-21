@@ -287,7 +287,78 @@
     <delete file="cobertura.ser" />
   </target>
 
+  <target name="bin-archive" 
+    depends="init,compile_prod,jar_prod">
+    <property name="bin.archive" value="connector-ldap-${version}" />
+    <zip destfile="${build.dir}/${bin.archive}.zip">
+      <zipfileset dir="${jar-prod.dir}" 
+        prefix="${bin.archive}" />
+        <zipfileset file="../RELEASE_NOTES" 
+           prefix="${bin.archive}" />
+        <zipfileset file="../COPYING" 
+           prefix="${bin.archive}" />
+    </zip>
+    <tar destfile="${build.dir}/${bin.archive}.tar.gz" 
+      compression="gzip">
+      <zipfileset src="${build.dir}/${bin.archive}.zip"/>
+    </tar>
+
+    <checksum algorithm="SHA-1">
+      <fileset dir="${build.dir}">
+        <include name="${bin.archive}*" />
+      </fileset>
+    </checksum>
+
+  </target>
+
+  <target name="src-archive" depends="init,compile_prod,jar_prod">
+    <property name="src.archive" value="connector-ldap-${version}-src" />
+
+    <!-- Use 'svn export' to create a clean version of the source tree
+         in the build dir.  You can adjust the behaviour of this by setting
+         some properties when invoking ant:
+
+         svn.export.revision - the revision of the tree to pull from svn.
+         svn.export.source - the source of the tree, either a svn repository
+                             URL, or a pathname of a working directory tree.
+
+         Note: you cannot specify both svn.export.revision and point
+         svn.export.source at a local working tree.
+    -->
+    <condition property="svn.export.revision.arg"
+               value="-r ${svn.export.revision}" 
+               else="" >
+      <isset property="svn.export.revision"/>
+    </condition>
+    <property name="svn.export.source" value=".." />
+    <property name="svn.export.dir" value="${build.dir}/${src.archive}" />
+
+    <delete dir="${svn.export.dir}" quiet="true" /> 
+    <exec executable="svn">
+      <arg line="export ${svn.export.revision.arg} ${svn.export.source} ${svn.export.dir}" />
+    </exec>
+
+    <!-- Create .zip and .tar.gz archives of the exported source tree. -->
+    <zip destfile="${build.dir}/${src.archive}.zip">
+          <zipfileset dir="${svn.export.dir}" prefix="${src.archive}" />
+    </zip>
+    <tar destfile="${build.dir}/${src.archive}.tar.gz"
+         longfile="gnu" compression="gzip">
+      <zipfileset src="${build.dir}/${src.archive}.zip"/>
+    </tar>
+
+    <checksum algorithm="SHA-1">
+      <fileset dir="${build.dir}">
+        <include name="${src.archive}*" />
+      </fileset>
+    </checksum>
+ 
+    <delete dir="${svn.export.dir}" quiet="true" />
+  </target>
 
   <target name="run_code_coverage" depends="run_tests,coverage-report,alternate-coverage-report" description="Compile, instrument ourself, run the tests and generate JUnit and coverage reports."/>
+
+	<target name="everything" depends="clean,jar_prod,bin-archive,src-archive, jar_tests, clean_code_coverage, compile_code_coverage"
+    description="Clean, build prod, test jar files and archives. Also compile code coverage" />
 
 </project>
