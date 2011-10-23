@@ -15,7 +15,7 @@ Release 2.8.2, Oct 20, 2011
 
 Introduction
 ------------
-This is a maintenance beta release that improves quality without
+This is a preview maintenance release that improves quality without
 adding any new functionality. Users of previous releases are
 encouraged to upgrade.
 
@@ -46,7 +46,7 @@ Release 2.6.4, Oct 12, 2010
 
 Introduction
 ------------
-This is the first beta release of the product. Users of previous
+This is the first preview release of the product. Users of previous
 releases are strongly encouraged to upgrade.
 
 
@@ -55,4 +55,4 @@ Release 2.6.0, Aug 11, 2011
 
 Introduction
 ------------
-This is a development release of the product.
+This is an unsupported, beta release of the product.
