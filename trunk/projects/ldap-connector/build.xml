@@ -5,6 +5,11 @@
   <property file="${user.home}/google-enterprise-connector-ldap.properties" />
   <property file="version.properties" />
 
+  <propertyset id="javatest.properties">
+    <propertyref prefix="javatest."/>
+    <mapper type="glob" from="javatest.*" to="*"/>
+  </propertyset>
+
   <property name="COMPILE_DEBUG_FLAG" value="true" />
   <property name="COMPILE_DEBUG_LEVEL" value="source,lines,vars" />
 
@@ -143,7 +148,10 @@
       <fileset dir="${config.dir}" />
     </copy>
 
-    <junit printsummary="yes" haltonfailure="yes">
+    <property name="test.suite" value="*"/>
+
+    <junit printsummary="yes" haltonfailure="no"
+           failureproperty="${ant.project.name}.failure">
       <assertions><enable/></assertions>
       <!--
           The instrumented classes reference classes used by the
@@ -162,11 +170,11 @@
         <fileset dir="${spi.jar.dir}" includes="**/*.jar" />
         <pathelement location="${jar-prod.file}" />
       </classpath>
+      <syspropertyset refid="javatest.properties"/>
       <formatter type="xml" />
-      <test name="${testcase}" todir="${reports.xml.dir}" if="testcase" />
-      <batchtest todir="${reports.xml.dir}" unless="testcase">
+      <batchtest todir="${reports.xml.dir}">
         <fileset dir="${test.dir}">
-          <include name="**/*Test.java" />
+          <include name="**/${test.suite}Test.java" />
         </fileset>
       </batchtest>
 
@@ -174,7 +182,7 @@
       <formatter type="plain" />
       <batchtest fork="yes" todir="${tests_out.dir}">
         <fileset dir="${src-tests.dir}">
-          <include name="**/*Test.java" />
+          <include name="**/${test.suite}Test.java" />
         </fileset>
       </batchtest>
     </junit>
@@ -186,6 +194,7 @@
       <report format="frames" todir="${reports.html.dir}" />
     </junitreport>
 
+    <fail if="${ant.project.name}.failure" message="Test failure"/>
   </target>
 
   <target name="clean" description="Deletes all build files.">
