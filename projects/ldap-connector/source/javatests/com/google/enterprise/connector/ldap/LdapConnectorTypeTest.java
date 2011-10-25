@@ -55,8 +55,11 @@ public class LdapConnectorTypeTest extends TestCase {
     String formSnippet = cr.getFormSnippet();
     ConnectorFieldsTest.validateXhtml(formSnippet);
     assertBasicConfigElements(b, formSnippet);
+
+    // TODO: This is fragile because it always matches the two hidden
+    // JavaScript handling.
     List<String> lines = findMatchingLines(formSnippet, "schema");
-    assertEquals(0, lines.size());
+    assertEquals(lines.toString(), 2, lines.size());
   }
 
   private void assertBasicConfigElements(ResourceBundle b, String formSnippet) {
@@ -94,8 +97,11 @@ public class LdapConnectorTypeTest extends TestCase {
 
     assertBasicConfigElements(b, formSnippet);
     ConnectorFieldsTest.validateXhtml(formSnippet);
+
+    // TODO: This is fragile because it always matches the two hidden
+    // JavaScript handling.
     List<String> lines = findMatchingLines(formSnippet, "schema");
-    assertTrue(0 < lines.size());
+    assertTrue(lines.toString(), 2 < lines.size());
   }
 
   public void testValidateConfigGetSchemaSimpleAuth() throws Exception {

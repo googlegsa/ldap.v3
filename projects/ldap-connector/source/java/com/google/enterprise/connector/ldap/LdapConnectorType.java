@@ -288,10 +288,12 @@ public class LdapConnectorType implements ConnectorType {
       // from the UI as one json string.
       String schemaValue = LdapConnectorConfig.
           getJsonStringForSelectedAttributes(config);
+      buf.append("<tr style='display: none'><td>\n");
       buf.append("<input type = 'hidden' id = 'schemavalue'");
       buf.append(" name = 'schemavalue' value = '").append(schemaValue);
       buf.append("' />");
       buf.append(getSchemaAppenderJavaScript());
+      buf.append("</td></tr>\n");
       return buf.toString();
     }
 

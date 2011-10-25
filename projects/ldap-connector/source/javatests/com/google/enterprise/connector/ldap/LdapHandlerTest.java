@@ -25,7 +25,7 @@ import com.google.enterprise.connector.ldap.LdapHandler.LdapRule.Scope;
 import junit.framework.TestCase;
 
 import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 
@@ -40,10 +40,7 @@ import javax.naming.ldap.LdapContext;
  */
 public class LdapHandlerTest extends TestCase {
 
-  private static final String RESOURCE_BUNDLE_NAME =
-    "com/google/enterprise/connector/ldap/" +
-    "LdapTesting";
-  private static final ResourceBundle TEST_RESOURCE_BUNDLE;
+  private static final Properties TEST_PROPERTIES;
 
   private static final String TEST_FILTER;
   private static final String TEST_HOSTNAME;
@@ -51,16 +48,17 @@ public class LdapHandlerTest extends TestCase {
   private static final String TEST_SCHEMA_KEY;
 
   static {
-    TEST_RESOURCE_BUNDLE = ResourceBundle.getBundle(RESOURCE_BUNDLE_NAME);
-    TEST_FILTER = TEST_RESOURCE_BUNDLE.getString("filter");
-    TEST_HOSTNAME = TEST_RESOURCE_BUNDLE.getString("hostname");
-    String schemaString = TEST_RESOURCE_BUNDLE.getString("schema");
+    // TODO: Create a Properties wrapper that exposes only the test properties.
+    TEST_PROPERTIES = System.getProperties();
+    TEST_FILTER = TEST_PROPERTIES.getProperty("filter");
+    TEST_HOSTNAME = TEST_PROPERTIES.getProperty("hostname");
+    String schemaString = TEST_PROPERTIES.getProperty("schema");
     TEST_SCHEMA = Sets.newHashSet(schemaString.split(","));
-    TEST_SCHEMA_KEY = TEST_RESOURCE_BUNDLE.getString("schema_key");
+    TEST_SCHEMA_KEY = TEST_PROPERTIES.getProperty("schema_key");
   }
 
-  private static ResourceBundle getTestResourceBundle() {
-    return TEST_RESOURCE_BUNDLE;
+  private static Properties getTestProperties() {
+    return TEST_PROPERTIES;
   }
 
   private static String getTestFilter() {
@@ -90,7 +88,7 @@ public class LdapHandlerTest extends TestCase {
     Method method = Method.STANDARD;
     String hostname = LdapHandlerTest.getHostname();
     int port = 389;
-    String baseDN = LdapHandlerTest.getTestResourceBundle().getString("basedn");
+    String baseDN = LdapHandlerTest.getTestProperties().getProperty("basedn");
     LdapConnectionSettings settings =
         new LdapConnectionSettings(method, hostname, port, baseDN);
     return settings;
@@ -111,13 +109,19 @@ public class LdapHandlerTest extends TestCase {
     Method method = Method.STANDARD;
     String hostname = "not-ldap.xyzzy.foo";
     int port = 389;
-    String baseDN = LdapHandlerTest.getTestResourceBundle().getString("basedn");
+    String baseDN = LdapHandlerTest.getTestProperties().getProperty("basedn");
     LdapConnectionSettings settings =
         new LdapConnectionSettings(method, hostname, port, baseDN);
     return settings;
   }
 
   private static LdapHandler makeLdapHandlerForTesting(Set<String> schema, int maxResults) {
+    // TODO: This is a hack to get the tests to run against a large
+    // test LDAP server without throwing an OutOfMemoryError.
+    if (maxResults == 0) {
+      maxResults = 1000;
+    }
+
     LdapRule ldapRule = makeSimpleLdapRule();
     LdapHandler ldapHandler = new LdapHandler();
     ldapHandler.setLdapConnectionSettings(makeLdapConnectionSettings());
@@ -164,7 +168,7 @@ public class LdapHandlerTest extends TestCase {
   public void testLimitedQuery() {
     LdapHandler ldapHandler = makeLdapHandlerForTesting(null, 1);
     Map<String, Multimap<String, String>> mapOfMultimaps = ldapHandler.get();
-    assertEquals(1,mapOfMultimaps.size());
+    assertEquals(1, mapOfMultimaps.size());
   }
 
   private void dumpSchema(Set<String> schema) {

@@ -8,3 +8,12 @@
 
 # The projects directory of the google-enterprise-connector-manager tree
 connector-manager-projects.dir = ${user.home}/gsa/google-enterprise-connector-manager/projects
+
+## 
+# Test Properties
+
+javatest.filter =
+javatest.hostname = localhost
+javatest.schema = title
+javatest.schema_key = dn
+javatest.basedn = ou=People,dc=example,dc=com
