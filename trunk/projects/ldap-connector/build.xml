@@ -12,6 +12,8 @@
 
   <property name="COMPILE_DEBUG_FLAG" value="true" />
   <property name="COMPILE_DEBUG_LEVEL" value="source,lines,vars" />
+  <property name="COMPILE_TARGET" value="1.5" />
+  <property name="COMPILE_BOOTCLASSPATH" value="${build.bootclasspath}" />
 
   <property name="build.dir" value="build" />
   <property name="build-prod.dir" value="${build.dir}/prod" />
@@ -74,9 +76,11 @@
            includeantruntime="false"
            debug="${COMPILE_DEBUG_FLAG}"
            debuglevel="${COMPILE_DEBUG_LEVEL}"
-           target="1.5" source="1.5">
+           target="${COMPILE_TARGET}" source="${COMPILE_TARGET}">
+      <compilerarg line="-Xlint -Xlint:-serial"/>
+      <bootclasspath path="${COMPILE_BOOTCLASSPATH}"/>
       <classpath>
-        <fileset dir="${spi.jar.dir}" includes="**/*.jar" />
+        <fileset dir="${spi.jar.dir}" includes="**/connector-spi.jar" />
         <fileset dir="${connector-manager-thirdparty-jar.dir}">
           <include name="prod/*.jar" />
         </fileset>
@@ -109,7 +113,10 @@
            includeantruntime="false"
            debug="${COMPILE_DEBUG_FLAG}"
            debuglevel="${COMPILE_DEBUG_LEVEL}"
-           target="1.5" source="1.5">
+           target="${COMPILE_TARGET}" source="${COMPILE_TARGET}">
+      <!-- CM JAR Class-Path references are not available. -->
+      <compilerarg line="-Xlint -Xlint:-serial -Xlint:-path"/>
+      <bootclasspath path="${COMPILE_BOOTCLASSPATH}"/>
       <classpath>
         <fileset dir="${spi.jar.dir}" includes="**/*.jar" />
         <fileset file="${jar-prod.file}" />
@@ -206,7 +213,6 @@
   <taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
 
   <target name="init_code_coverage">
-    <mkdir dir="${classes.dir}" />
     <mkdir dir="${instrumented.dir}" />
     <mkdir dir="${reports.xml.dir}" />
     <mkdir dir="${reports.html.dir}" />
@@ -215,30 +221,8 @@
     <mkdir dir="${coverage.html.dir}" />
   </target>
 
-
-  <target name="compile_code_coverage" depends="init_code_coverage">
-    <javac srcdir="${src.dir}" destdir="${classes.dir}" 
-           includeantruntime="false"
-           debug="true">
-      <classpath>
-        <fileset dir="${spi.jar.dir}" includes="**/*.jar" />
-        <fileset dir="${connector-manager-thirdparty-jar.dir}">
-          <include name="prod/*.jar" />
-        </fileset>
-      </classpath>
-    </javac>
-    <javac srcdir="${test.dir}" destdir="${classes.dir}" 
-           includeantruntime="false"
-           debug="true">
-      <classpath>
-        <fileset dir="${spi.jar.dir}" includes="**/*.jar" />
-        <fileset dir="${connector-manager-thirdparty-jar.dir}">
-          <include name="prod/*.jar" />
-          <include name="tests/junit.jar" />
-        </fileset>
-      </classpath>
-    </javac>
-  </target>
+  <target name="compile_code_coverage" 
+          depends="init_code_coverage,compile_prod,compile_tests"/>
 
   <target name="instrument" depends="compile_code_coverage">
     <!--
@@ -255,13 +239,12 @@
       -->
       <ignore regex="org.apache.log4j.*" />
 
-      <fileset dir="${classes.dir}">
-        <!--
-            Instrument all the application classes, but
-            don't instrument the test classes.
-        -->
+      <!--
+	  Instrument all the application classes, but
+	  don't instrument the test classes.
+      -->
+      <fileset dir="${classes-prod.dir}">
         <include name="**/*.class" />
-        <exclude name="**/*Test.class" />
       </fileset>
     </cobertura-instrument>
   </target>
@@ -289,7 +272,6 @@
 
   <target name="clean_code_coverage"
           description="Remove all files created by the build/test process.">
-    <delete dir="${classes.dir}" />
     <delete dir="${instrumented.dir}" />
     <delete dir="${reports.dir}" />
     <delete file="cobertura.log" />
