@@ -9,6 +9,9 @@
 # The projects directory of the google-enterprise-connector-manager tree
 connector-manager-projects.dir = ${user.home}/gsa/google-enterprise-connector-manager/projects
 
+# JDK 1.5 bootclasspath.
+build.bootclasspath = /System/Library/Frameworks/JavaVM.framework/Versions/1.5.0/Classes/classes.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.5.0/Classes/jsse.jar
+
 ## 
 # Test Properties
 
