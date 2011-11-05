@@ -27,26 +27,28 @@ import java.util.jar.Manifest;
  *   java -jar /path/to/connector-otex.jar
  */
 public class LdapMain {
-    public static void main(String[] args) throws Exception {
-        // From our class, get the jar file URL to this class file, and
-        // make our way to the the Manifest located in that jar file.
-        Class thisClass = LdapMain.class;
-        String resName = "/" + thisClass.getName().replace('.', '/') + ".class";
+  public static void main(String[] args) throws Exception {
+    // From our class, get the jar file URL to this class file, and
+    // make our way to the the Manifest located in that jar file.
+    Class thisClass = LdapMain.class;
+    String resName = "/" + thisClass.getName().replace('.', '/') + ".class";
 
-        // Locate the Jar file containing our class.
-        URL url = thisClass.getResource(resName);
-        JarURLConnection connection = (JarURLConnection) url.openConnection();
+    // Locate the Jar file containing our class.
+    URL url = thisClass.getResource(resName);
+    JarURLConnection connection = (JarURLConnection) url.openConnection();
 
-        // Get the Manifest for our Jar and extract the Implementation-Title
-        // and Implementation-Version.
-        Manifest manifest = connection.getManifest();
-        Attributes attrs = manifest.getMainAttributes();
-        String name = attrs.getValue("Implementation-Title");
-        if (name != null) {
-            name = name.replaceAll("[ \t\r\n][ \t\r\n]+", " ");
-        }
-        String version = attrs.getValue("Implementation-Version");
-
-        System.out.println(name + " v" + version);
+    // Get the Manifest for our Jar and extract the Implementation-Title
+    // and Implementation-Version.
+    Manifest manifest = connection.getManifest();
+    Attributes attrs = manifest.getMainAttributes();
+    String name = attrs.getValue("Implementation-Title");
+    if (name == null) {
+      name = thisClass.getName();
+    } else {
+      name = name.replaceAll("[ \t\r\n][ \t\r\n]+", " ");
     }
+    String version = attrs.getValue("Implementation-Version");
+
+    System.out.println(name + " v" + version);
+  }
 }

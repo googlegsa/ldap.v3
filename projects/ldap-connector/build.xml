@@ -47,11 +47,10 @@
   <property name="lib-zip.dir" value  = "${zip.dir}/Lib" />
 
   <!--Cobertura properties -->
-
   <property file="${config.dir}/build_code_coverage.properties" />
   <path id="cobertura.classpath">
-    <fileset dir="third_party">
-      <include name="prod/*.jar" />
+    <fileset dir="${connector-manager-thirdparty-jar.dir}/cobertura">
+      <include name="**/*.jar" />
     </fileset>
   </path>
 
