@@ -77,10 +77,6 @@ public class LdapHandler implements LdapHandlerI {
   private int maxResults = 0;
 
   private LdapConnection connection = null;
-  
-  // It's okay for multiple connector instances to use this same counter,
-  // it only affects the duration of wait
-  private static volatile int waitcounter = 0;  
 
   private static Function<String, String> toLower = new Function<String, String>() {
     /* @Override */
@@ -140,6 +136,7 @@ public class LdapHandler implements LdapHandlerI {
   LdapContext getLdapContext() {
     return connection.getLdapContext();
   }
+
   /**
    * Executes a rule. Note: the implementation of this class is based on GADS.
    * Note: execute should only be called once. To execute again, create a new
@@ -177,7 +174,8 @@ public class LdapHandler implements LdapHandlerI {
     NamingEnumeration<SearchResult> ldapResults = null;
     int resultCount = 0;
     byte[] cookie = null;
-    try {
+    try {      
+      
       do {
         SearchControls controls = makeControls(rule, schema);
 
@@ -242,26 +240,9 @@ public class LdapHandler implements LdapHandlerI {
         ctx.setRequestControls(new Control[] {new PagedResultsControl(LdapConnection.PAGESIZE,
             cookie, Control.NONCRITICAL)});
       } while (!shouldStop(cookie));
-      // reset wait counter
-      waitcounter = 0;
+
     } catch (CommunicationException e) {
-        LOG.log(Level.SEVERE, "Encountered CommunicationException, will wait and continue..", e);
-        try {
-            // wait for some time to check if the unavailable ldap source would be back 
-            long sleep_time;
-            if (waitcounter < 4) {
-                sleep_time = (long) (60 * 1000 * java.lang.Math.pow(2, waitcounter));
-            }
-            else {
-                sleep_time = (long) (15 * 60 * 1000); //  wait for 15 minutes max
-            }
-            LOG.info(" waiting for.." + sleep_time);
-            Thread.sleep(sleep_time);
-            waitcounter++;
-        }
-        catch (InterruptedException e1) {
-            LOG.info("InterruptedException at CommunicationException catch..");
-        }
+      throw new LdapTransientException(e);
     } catch (NameNotFoundException e) {
       throw new IllegalStateException(e);
     } catch (NamingException e) {
