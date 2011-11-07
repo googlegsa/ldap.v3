@@ -23,6 +23,7 @@ import com.google.common.collect.Multimap;
 import com.google.enterprise.connector.spi.SpiConstants;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,9 +35,14 @@ import java.util.logging.Logger;
  */
 public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
 
-  private static Logger LOG = Logger.getLogger(LdapJsonDocumentFetcher.class.getName());
-
+  private static final Logger LOG = Logger.getLogger(LdapJsonDocumentFetcher.class.getName());
+  
+  // It's okay for multiple connector instances to use this same counter,
+  // it only affects the duration of wait
+  private static volatile int waitcounter = 0; 
+  
   private final Supplier<Map<String, Multimap<String, String>>> mapOfMultimapsSupplier;
+
 
   /**
    * Creates a JsonDocument fetcher from something that provides a sorted map of
@@ -69,9 +75,35 @@ public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
 
   /* @Override */
   public Iterator<JsonDocument> iterator() {
-    Map<String, Multimap<String, String>> results = mapOfMultimapsSupplier.get();
-    return Iterators.transform(results.entrySet().iterator(), Functions.compose(
-        JsonDocument.buildFromMultimap, addDocid));
+
+    Map<String, Multimap<String, String>> results;
+
+    try {
+      results = mapOfMultimapsSupplier.get();
+      // reset wait counter
+      waitcounter = 0;
+    } catch (LdapTransientException e) {
+      LOG.log(Level.SEVERE, "Encountered IllegalStateException, will wait and continue.", e);
+      results =  Collections.emptyMap();
+      try {
+        // wait for some time to check if the unavailable ldap source would be
+        // back
+        long sleepTime;
+        if (waitcounter < 4) {
+          sleepTime = (long) (60 * 1000 * java.lang.Math.pow(2, waitcounter));
+        } else {
+          sleepTime = (15 * 60 * 1000); // wait for 15 minutes max
+        }
+        LOG.info("Waiting for " + sleepTime + " milliseconds.");
+        Thread.sleep(sleepTime);
+        waitcounter++;
+      } catch (InterruptedException e1) {
+        LOG.info("InterruptedException at CommunicationException catch..");
+      }
+    }
+
+    return Iterators.transform(results.entrySet().iterator(),
+        Functions.compose(JsonDocument.buildFromMultimap, addDocid));
   }
 
   /**
