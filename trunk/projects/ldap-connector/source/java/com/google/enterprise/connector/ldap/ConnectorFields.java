@@ -377,6 +377,7 @@ public class ConnectorFields {
 
     private void makeSingleCheckboxHtml(StringBuffer sb, String boxname, String key,
         boolean selected) {
+      sb.append("<label>");
       sb.append("<input type=\"checkbox\" name=\"");
       sb.append(boxname);
       sb.append("\" value=\"");
@@ -388,8 +389,12 @@ public class ConnectorFields {
       if (selected) {
         sb.append(" checked=\"checked\"");
       }
+      if (key.equalsIgnoreCase(LdapHandler.DN_ATTRIBUTE)) {
+        sb.append(" disabled=\"disabled\" ");
+      }
       sb.append("/> ");
       sb.append(key);
+      sb.append("</label>");
     }
 
     private String getCheckboxesHtml(String name, ResourceBundle bundle) {
