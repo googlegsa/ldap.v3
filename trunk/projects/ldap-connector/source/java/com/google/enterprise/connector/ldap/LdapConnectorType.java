@@ -290,7 +290,7 @@ public class LdapConnectorType implements ConnectorType {
       // schemavalue hidden variable is used to get all the selected attributes
       // from the UI as one json string.
       String schemaValue = LdapConnectorConfig.
-          getJsonStringForSelectedAttributes(config);
+          getSchemaValueFromConfig(config);
       buf.append("<tr style='display: none'><td>\n");
       buf.append("<input type = 'hidden' id = 'schemavalue'");
       buf.append(" name = 'schemavalue' value = '").append(schemaValue);
@@ -491,10 +491,11 @@ public class LdapConnectorType implements ConnectorType {
       .append(" = JSON.stringify(schemaList);")
       .append("}")
       .append("else {")
+      .append("if(" + GET_INDEXOF_FUNCTION_NAME + "(schemaList,chkbox.value) >= 0) {")
       .append("schemaList.splice(" + GET_INDEXOF_FUNCTION_NAME + "(schemaList,chkbox.value),1);")
       .append("document.getElementById('schemavalue').value")
       .append(" = JSON.stringify(schemaList);")
-      .append("}}");
+      .append("}}}");
       return buf.toString();
     }
     

@@ -25,6 +25,8 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 import junit.framework.TestCase;
 
+import org.json.JSONException;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Locale;
@@ -66,7 +68,7 @@ public class LdapConnectorTypeHtmlunitTest extends TestCase {
 
     HtmlHiddenInput hiddenSchemaValueField = null;
     hiddenSchemaValueField = htmlUnitPage.getHtmlForm().getInputByName("schemavalue");
-    assertEquals("[\"employeestatus\",\"employeenumber\"]",
+    assertEquals("[\"dn\",\"employeenumber\",\"employeestatus\"]",
         hiddenSchemaValueField.getValueAttribute());
 
     // de-select employeestatus checkbox and verify results
@@ -76,7 +78,7 @@ public class LdapConnectorTypeHtmlunitTest extends TestCase {
     HtmlCheckBoxInput chkFieldAfter = htmlUnitPage.getHtmlForm().getInputByValue("employeestatus");
     hiddenSchemaValueField = htmlUnitPage.getHtmlForm().getInputByName("schemavalue");
     assertFalse(chkFieldAfter.isChecked());
-    assertEquals("[\"employeenumber\"]", hiddenSchemaValueField.getValueAttribute());
+    assertEquals("[\"dn\",\"employeenumber\"]", hiddenSchemaValueField.getValueAttribute());
 
     // de-select employeenumber checkbox and verify results
     chkFieldBefore = htmlUnitPage.getHtmlForm().getInputByValue("employeenumber");
@@ -85,8 +87,66 @@ public class LdapConnectorTypeHtmlunitTest extends TestCase {
     chkFieldAfter = htmlUnitPage.getHtmlForm().getInputByValue("employeenumber");
     hiddenSchemaValueField = htmlUnitPage.getHtmlForm().getInputByName("schemavalue");
     assertFalse(chkFieldAfter.isChecked());
-    assertEquals("[]", hiddenSchemaValueField.getValueAttribute());
+    assertEquals("[\"dn\"]", hiddenSchemaValueField.getValueAttribute());
 
     htmlUnitPage.getWebClient().closeAllWindows();
+  }
+
+  public void testLdapConnectorHtmlPageDeleteDn() throws FailingHttpStatusCodeException,
+      MalformedURLException, IOException {
+
+    SimpleMockLdapHandler basicMock = MockLdapHandlers.getBasicMock();
+    LdapConnectorType lct = new LdapConnectorType(basicMock);
+    ResourceBundle b = lct.getResourceBundle(Locale.US);
+
+    ImmutableMap<String, String> Config =
+        ImmutableMap.<String, String>builder().put("googlePropertiesVersion", "3")
+            .put("authtype", "ANONYMOUS").put("hostname", "ldap.realistic-looking-domain.com")
+            .put("googleConnectorName", "x").put("password", "test").put("username", "admin")
+            .put("schema_9", "employeestatus").put("schema_8", "employeenumber")
+            .put("method", "STANDARD").put("basedn", "ou=people,dc=example,dc=com")
+            .put("filter", "ou=people").build();
+
+    ConfigureResponse cr = lct.getPopulatedConfigForm(Config, Locale.US);
+
+    Map<String, String> configData = cr.getConfigData();
+    assertTrue(configData == null || configData.isEmpty());
+
+    String message = cr.getMessage();
+    assertTrue(message == null || message.length() < 1);
+
+    HtmlUnitTestPage htmlUnitPage = new HtmlUnitTestPage(cr);
+    assertTrue(htmlUnitPage.getWebClient().isJavaScriptEnabled());
+
+    HtmlHiddenInput hiddenSchemaValueField =
+        htmlUnitPage.getHtmlForm().getInputByName("schemavalue");
+    assertEquals("[\"dn\",\"employeenumber\",\"employeestatus\"]",
+        hiddenSchemaValueField.getValueAttribute());
+    HtmlCheckBoxInput chkFieldDnBefore = htmlUnitPage.getHtmlForm().getInputByValue("dn");
+    assertTrue(chkFieldDnBefore.isChecked());
+    HtmlCheckBoxInput chkField1Before =
+        htmlUnitPage.getHtmlForm().getInputByValue("employeenumber");
+    assertTrue(chkField1Before.isChecked());
+    HtmlCheckBoxInput chkField2Before =
+        htmlUnitPage.getHtmlForm().getInputByValue("employeestatus");
+    assertTrue(chkField2Before.isChecked());
+
+    HtmlPage pageAfterclick = chkFieldDnBefore.click();
+
+    hiddenSchemaValueField = htmlUnitPage.getHtmlForm().getInputByName("schemavalue");
+    assertEquals("[\"dn\",\"employeenumber\",\"employeestatus\"]",
+        hiddenSchemaValueField.getValueAttribute());
+    HtmlCheckBoxInput chkFieldDnAfter = htmlUnitPage.getHtmlForm().getInputByValue("dn");
+    assertTrue(chkFieldDnAfter.isChecked());
+
+    HtmlCheckBoxInput chkField1After = 
+        htmlUnitPage.getHtmlForm().getInputByValue("employeenumber");
+    assertTrue(chkField1After.isChecked());
+    HtmlCheckBoxInput chkField2After = 
+        htmlUnitPage.getHtmlForm().getInputByValue("employeestatus");
+    assertTrue(chkField2After.isChecked());
+
+    htmlUnitPage.getWebClient().closeAllWindows();
+
   }
 }
