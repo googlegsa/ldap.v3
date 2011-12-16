@@ -3,6 +3,7 @@
 <beans>
   <bean id="LdapHandler"
         class="com.google.enterprise.connector.ldap.LdapHandler">
+    <property name="connectionTimeout" value="10000" />
   </bean>
   <bean id="LDAPConnectorType"
         class="com.google.enterprise.connector.ldap.LdapConnectorType">
