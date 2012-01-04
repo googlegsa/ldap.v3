@@ -28,6 +28,8 @@ import com.google.enterprise.connector.ldap.LdapConstants.Method;
 import com.google.enterprise.connector.ldap.LdapConstants.ServerType;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
@@ -75,6 +77,7 @@ public class LdapHandler implements LdapHandlerI {
   private Set<String> schema = null;
   private LdapRule rule = null;
   private int maxResults = 0;
+  private String ldapConnectionTimeout = "-1";
 
   private LdapConnection connection = null;
 
@@ -86,6 +89,14 @@ public class LdapHandler implements LdapHandlerI {
   };
 
   public LdapHandler() {
+  }
+  
+  public void setConnectionTimeout(String ldapConnectionTimeout) {
+    this.ldapConnectionTimeout = ldapConnectionTimeout;
+  }
+
+  public String getConnectionTimeout() {
+    return this.ldapConnectionTimeout;
   }
 
   public void setQueryParameters(LdapRule rule, Set<String> schema, String schemaKey, int maxResults) {
@@ -103,7 +114,7 @@ public class LdapHandler implements LdapHandlerI {
   public void setLdapConnectionSettings(LdapConnectionSettings ldapConnectionSettings) {
     this.ldapConnectionSettings = ldapConnectionSettings;
     LOG.fine("settings " + this.ldapConnectionSettings);
-    connection = new LdapConnection(ldapConnectionSettings);
+    connection = new LdapConnection(ldapConnectionSettings, getConnectionTimeout());
   }
 
   /* @Override */
@@ -156,7 +167,7 @@ public class LdapHandler implements LdapHandlerI {
       throw new IllegalStateException("Must successfully set LdapConnectionSettings before get");
     }
 
-    connection = new LdapConnection(ldapConnectionSettings);
+    connection = new LdapConnection(ldapConnectionSettings, getConnectionTimeout());
 
     LOG.fine("connection:" + connection);
 
@@ -369,17 +380,21 @@ public class LdapHandler implements LdapHandlerI {
 
     private static final String COM_SUN_JNDI_LDAP_LDAP_CTX_FACTORY =
         "com.sun.jndi.ldap.LdapCtxFactory";
-
+    private static final String COM_SUN_JNDI_LDAP_CONNECT_TIMEOUT =
+        "com.sun.jndi.ldap.connect.timeout";
+    
     private final LdapConnectionSettings settings;
     private LdapContext ldapContext = null;
     private final Map<LdapConnectionError, String> errors;
+    private String connectionTimeOut;
 
     public static final int PAGESIZE = 1000;
-
-    public LdapConnection(LdapConnectionSettings ldapConnectionSettings) {
+    
+    public LdapConnection(LdapConnectionSettings ldapConnectionSettings, String connectionTimeOut) {
       LOG.fine("Configuring LdapConnection with settings: " + ldapConnectionSettings);
       this.settings = ldapConnectionSettings;
       this.errors = Maps.newHashMap();
+      this.connectionTimeOut = connectionTimeOut;
       Hashtable<String, String> env = configureLdapEnvironment();
       ldapContext = makeContext(env, PAGESIZE);
     }
@@ -397,7 +412,16 @@ public class LdapHandler implements LdapHandlerI {
       try {
         ctx = new InitialLdapContext(env, null);
       } catch (CommunicationException e) {
-        errors.put(LdapConnectionError.CommunicationException, e.getMessage());
+        LOG.info("Communication error : " + e.toString());
+
+        if (e.getCause() instanceof SocketTimeoutException) {
+          errors.put(LdapConnectionError.CommunicationExceptionTimeout, e.getCause().getMessage());
+        } else if (e.getCause() instanceof UnknownHostException) {
+          errors.put(LdapConnectionError.CommunicationExceptionUnknownhost, e.getCause()
+              .getMessage());
+        } else {
+          errors.put(LdapConnectionError.CommunicationException, e.getMessage());
+        }
       } catch (AuthenticationNotSupportedException e) {
         errors.put(LdapConnectionError.AuthenticationNotSupported, e.getMessage());
       } catch (NamingException e) {
@@ -407,7 +431,7 @@ public class LdapHandler implements LdapHandlerI {
         return null;
       }
       try {
-        ctx.setRequestControls(new Control[] {new PagedResultsControl(pageSize,
+        ctx.setRequestControls(new Control[] {new PagedResultsControl(pageSize, 
             Control.NONCRITICAL)});
       } catch (NamingException e) {
         errors.put(LdapConnectionError.NamingException, e.getMessage());
@@ -459,6 +483,9 @@ public class LdapHandler implements LdapHandlerI {
 
       // force the following attributes to be returned as binary data
       env.put("java.naming.ldap.attributes.binary", "objectGUID objectSid");
+      
+      // Specify connection timeout, value of zero or less means use networks timeout value
+      env.put(COM_SUN_JNDI_LDAP_CONNECT_TIMEOUT, connectionTimeOut);    
 
       // Set our authentication settings.
       AuthType authType = settings.getAuthType();

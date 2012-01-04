@@ -28,6 +28,7 @@ import org.json.JSONException;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -182,6 +183,50 @@ public class LdapConnectorConfig {
       }
     }
     LOG.fine("Selected attributes: " + tempSchema);
+  }
+
+  /**
+   * Assigns value to schemavalue from config form. Adds DN_ATTRIBUTE if not
+   * present already.
+   * 
+   * @param config Config values entered on the form
+   * @return SchemaValue in as String
+   */
+  static String getSchemaValueFromConfig(Map<String, String> config) {
+
+    String configSchemaValue = null;
+    LOG.fine("Original SchemaValue - " + config.get(ConfigName.SCHEMAVALUE.toString()));
+
+    Set<String> schemaValue = new TreeSet<String>();
+    LOG.fine("Trying to recover attributes from schema checkboxes");
+    StringBuffer schemaKey = new StringBuffer();
+    schemaKey.append(ConfigName.SCHEMA.toString()).append("_").append("\\d");
+    Pattern keyPattern = Pattern.compile(schemaKey.toString());
+    Set<String> configKeySet = config.keySet();
+
+    for (String configKey : configKeySet) {
+      Matcher matcher = keyPattern.matcher(configKey);
+      if (matcher.find()) {
+        String schemaAttribute = config.get(configKey);
+        if (schemaAttribute != null && schemaAttribute.trim().length() != 0) {
+          schemaValue.add(config.get(configKey));
+        }
+      }
+    }
+
+    if (schemaValue.size() > 0 && !schemaValue.contains(LdapHandler.DN_ATTRIBUTE)) {
+      schemaValue.add(LdapHandler.DN_ATTRIBUTE);
+    }
+
+    try {
+      configSchemaValue = (new JSONArray(schemaValue.toString())).toString();
+      LOG.fine("From config SchemaValue - " + configSchemaValue);
+
+    } catch (JSONException e) {
+      LOG.log(Level.WARNING, "JSONException trace:", e);
+    }
+
+    return configSchemaValue;
   }
 
   private String getTrimmedValueFromConfig(Map<String, String> config, ConfigName name) {
