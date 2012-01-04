@@ -358,4 +358,31 @@ public class LdapConnectorTypeTest extends TestCase {
     assertTrue(0 < lines.size());
     return lines.get(0);
   }
+
+  public void testDefaultDnAttributeSelected() throws Exception {
+    SimpleMockLdapHandler basicMock = MockLdapHandlers.getBasicMock();
+    LdapConnectorType lct = new LdapConnectorType(basicMock);
+    ResourceBundle b = lct.getResourceBundle(Locale.US);
+    ImmutableMap<String, String> originalConfig =
+        ImmutableMap.<String, String>builder().put("authtype", "SIMPLE").put("username", "foo")
+            .put("password", "bar").put("port", "1389")
+            .put("hostname", "ldap.realistic-looking-domain.com")
+            .put("basedn", "ou=people,dc=example,dc=com").put("filter", "ou=people").build();
+    ConfigureResponse cr = lct.validateConfig(originalConfig, Locale.US, null);
+    String formSnippet = cr.getFormSnippet();
+    String message = cr.getMessage();
+    assertTrue(message, message == null || message.length() < 1);
+    Map<String, String> configData = cr.getConfigData();
+    assertTrue(configData == null || configData.isEmpty());
+
+    assertBasicConfigElements(b, formSnippet);
+
+    String line = findMatchingLine(formSnippet, "value=\"dn\"");
+    assertTrue("DN attrbute should be selected in formSnippet", line.contains("checked"));
+
+    ConnectorFieldsTest.validateXhtml(formSnippet);
+    List<String> lines = findMatchingLines(formSnippet, "schema");
+    assertTrue(0 < lines.size());
+  }
+
 }
