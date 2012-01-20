@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
-import javax.naming.CommunicationException;
 
 public class MockLdapHandlers {
 
@@ -120,30 +119,6 @@ public class MockLdapHandlers {
 
     SimpleMockLdapHandler result = new SimpleMockLdapHandler(repo, schemaKeys);
     result.setIsValid(true);
-    return result;
-  }
-
-  public static class ExceptionMockLdapHandler extends SimpleMockLdapHandler {
-    public ExceptionMockLdapHandler(Map<String, Multimap<String, String>> repository,
-        Set<String> schemaKeys) {
-      super(repository, schemaKeys);
-    }
-
-    @Override
-    public Map<String, Multimap<String, String>> get() {
-      try {
-        throw new CommunicationException("From ExceptionMockLdapHandler");
-      } catch (CommunicationException e) {
-        throw new LdapTransientException(e);
-      }
-    }
-  }
-
-  public static ExceptionMockLdapHandler getExceptionMock() {
-
-    Map<String, Multimap<String, String>> repo = makeSmallMultimapRepo();
-    ImmutableSet<String> schemaKeys = ImmutableSet.of("dn", "cn", "foo", "argle");
-    ExceptionMockLdapHandler result = new ExceptionMockLdapHandler(repo, schemaKeys);
     return result;
   }
 

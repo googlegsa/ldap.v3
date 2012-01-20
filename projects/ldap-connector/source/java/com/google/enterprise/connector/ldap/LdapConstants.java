@@ -92,9 +92,7 @@ public class LdapConstants {
     AuthenticationNotSupported,
     NamingException,
     IOException,
-    CommunicationException,
-    CommunicationExceptionTimeout,
-    CommunicationExceptionUnknownhost;
+    CommunicationException;
     public static ErrorMessages safeValueOf(String v) {
       return LdapConstants.safeValueOf(ErrorMessages.class, v);
     }

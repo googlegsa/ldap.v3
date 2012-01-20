@@ -41,10 +41,6 @@ public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
   // it only affects the duration of wait
   private static volatile int waitcounter = 0; 
   
-  /** default wait times are 1, 2, 4, 8 and 15 minutes, assigned in milliseconds.
-   */
-  private final int[] waitTimes; 
-  
   private final Supplier<Map<String, Multimap<String, String>>> mapOfMultimapsSupplier;
 
 
@@ -62,17 +58,8 @@ public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
   public LdapJsonDocumentFetcher(
       Supplier<Map<String, Multimap<String, String>>> mapOfMultimapsSupplier) {
     this.mapOfMultimapsSupplier = mapOfMultimapsSupplier;
-    this.waitTimes = new int[] { 1 * 60 * 1000, 2 * 60 * 1000, 4 * 60 * 1000, 
-    		  8 * 60 * 1000, 15 * 60 * 1000 }; 
   }
 
-  public LdapJsonDocumentFetcher(
-          Supplier<Map<String, Multimap<String, String>>> mapOfMultimapsSupplier, 
-          int [] waitTimes) {
-        this.mapOfMultimapsSupplier = mapOfMultimapsSupplier;
-        this.waitTimes = waitTimes;
-  }
-  
   private static Function<Entry<String, Multimap<String, String>>, Multimap<String, String>> addDocid =
       new Function<Entry<String, Multimap<String, String>>, Multimap<String, String>>() {
     /* @Override */
@@ -97,15 +84,15 @@ public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
       waitcounter = 0;
     } catch (LdapTransientException e) {
       LOG.log(Level.SEVERE, "Encountered IllegalStateException, will wait and continue.", e);
-      results = Collections.emptyMap();
+      results =  Collections.emptyMap();
       try {
         // wait for some time to check if the unavailable ldap source would be
         // back
         long sleepTime;
-        if (waitcounter < waitTimes.length) {
-          sleepTime = waitTimes[waitcounter];
+        if (waitcounter < 4) {
+          sleepTime = (long) (60 * 1000 * java.lang.Math.pow(2, waitcounter));
         } else {
-          sleepTime = waitTimes[waitTimes.length - 1];
+          sleepTime = (15 * 60 * 1000); // wait for 15 minutes max
         }
         LOG.info("Waiting for " + sleepTime + " milliseconds.");
         Thread.sleep(sleepTime);

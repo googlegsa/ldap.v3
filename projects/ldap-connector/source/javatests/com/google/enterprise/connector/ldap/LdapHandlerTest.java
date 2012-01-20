@@ -44,7 +44,6 @@ public class LdapHandlerTest extends TestCase {
 
   private static final String TEST_FILTER;
   private static final String TEST_HOSTNAME;
-  private static final String TEST_HOSTNAME_TIMEOUT;
   private static final Set<String> TEST_SCHEMA;
   private static final String TEST_SCHEMA_KEY;
 
@@ -53,7 +52,6 @@ public class LdapHandlerTest extends TestCase {
     TEST_PROPERTIES = System.getProperties();
     TEST_FILTER = TEST_PROPERTIES.getProperty("filter");
     TEST_HOSTNAME = TEST_PROPERTIES.getProperty("hostname");
-    TEST_HOSTNAME_TIMEOUT = TEST_PROPERTIES.getProperty("hostname.timeout");
     String schemaString = TEST_PROPERTIES.getProperty("schema");
     TEST_SCHEMA = Sets.newHashSet(schemaString.split(","));
     TEST_SCHEMA_KEY = TEST_PROPERTIES.getProperty("schema_key");
@@ -71,10 +69,6 @@ public class LdapHandlerTest extends TestCase {
     return TEST_HOSTNAME;
   }
 
-  private static String getTimeoutHostname() {
-    return TEST_HOSTNAME_TIMEOUT;
-  }
-  
   private static Set<String> getSchema() {
     return Sets.newHashSet(TEST_SCHEMA);
   }
@@ -121,28 +115,6 @@ public class LdapHandlerTest extends TestCase {
     return settings;
   }
 
-  public void testTimeoutConnectivity() {
-    LdapHandler handler = new LdapHandler();
-    long beforeTime = System.currentTimeMillis();
-    handler.setConnectionTimeout("10000");
-    handler.setLdapConnectionSettings(makeTimedoutLdapConnectionSettings());
-    LdapContext ldapContext = handler.getLdapContext();
-    long afterTime = System.currentTimeMillis();
-    assertEquals((afterTime - beforeTime), 10000, 100);
-    assertNull(ldapContext);    
-  }
-
-  private static LdapConnectionSettings makeTimedoutLdapConnectionSettings() {
-    Method method = Method.STANDARD;
-    // hostname needs to be valid but unreachable and times out for this test
-    String hostname = getTimeoutHostname();
-    int port = 389;
-    String baseDN = LdapHandlerTest.getTestProperties().getProperty("basedn");
-    LdapConnectionSettings settings =
-        new LdapConnectionSettings(method, hostname, port, baseDN);
-    return settings;
-  }  
-  
   private static LdapHandler makeLdapHandlerForTesting(Set<String> schema, int maxResults) {
     // TODO: This is a hack to get the tests to run against a large
     // test LDAP server without throwing an OutOfMemoryError.

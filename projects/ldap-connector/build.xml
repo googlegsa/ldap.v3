@@ -19,7 +19,6 @@
   <property name="build-prod.dir" value="${build.dir}/prod" />
   <property name="build-prod-config.dir" value="${build-prod.dir}/config" />
   <property name="build-tests.dir" value="${build.dir}/tests" />
-  <property name="third-party.dir" value="third_party" />
 
   <property name="classes-prod.dir" value="${build-prod.dir}/classes" />
   <property name="classes-tests.dir" value="${build-tests.dir}/classes" />
@@ -119,7 +118,6 @@
       <bootclasspath path="${COMPILE_BOOTCLASSPATH}"/>
       <classpath>
         <fileset dir="${spi.jar.dir}" includes="**/*.jar" />
-        <fileset dir="${third-party.dir}" includes="**/*.jar" />
         <fileset file="${jar-prod.file}" />
         <fileset dir="${connector-manager-thirdparty-jar.dir}">
           <include name="prod/*.jar" />
@@ -127,11 +125,6 @@
         </fileset>
       </classpath>
     </javac>
-    <copy todir="${classes-tests.dir}">
-      <fileset dir="${src-tests.dir}">
-          <include name="**/xhtml*" />
-      </fileset>
-    </copy>
   </target>
 
   <target name="jar_tests" description="Build ${jar-tests.file}"
@@ -180,7 +173,6 @@
           <include name="prod/*.jar" />
           <include name="tests/junit.jar" />
         </fileset>
-        <fileset dir="${third-party.dir}" includes="**/*.jar" />
         <fileset dir="${spi.jar.dir}" includes="**/*.jar" />
         <pathelement location="${jar-prod.file}" />
       </classpath>
