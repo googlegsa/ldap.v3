@@ -104,6 +104,44 @@ public class LdapConnectorTypeTest extends TestCase {
     assertTrue(lines.toString(), 2 < lines.size());
   }
 
+  /**
+   * This tests the empty base dn value. Verifies that it returns an error message.
+   * @throws Exception
+   */
+  public void testValidateEmptyBaseDn() throws Exception {
+    SimpleMockLdapHandler basicMock = MockLdapHandlers.getBasicMock();
+    LdapConnectorType lct = new LdapConnectorType(basicMock);
+    ResourceBundle b = lct.getResourceBundle(Locale.US);
+    ImmutableMap<String, String> originalConfig = ImmutableMap.<String, String> builder().put(
+            "authtype", "ANONYMOUS").put("port", "389").put("hostname", 
+            "ldap.realistic-looking-domain.com").put("basedn", "").put("filter", 
+            "ou=people").build();
+    ConfigureResponse cr = lct.validateConfig(originalConfig, Locale.US, null);
+    String message = cr.getMessage();
+    
+    String formSnippet = cr.getFormSnippet();
+    assertEquals(message, b.getString("MISSING_FIELDS")); 
+    
+    for (String key : originalConfig.keySet()) {
+      if (key.startsWith("google")) {
+        // this is a hidden config item that we don't expect to see in the form
+        continue;
+      }
+      if (key.contains("schema_") && !key.equals("schema_key")) {
+        // TODO: find a way to test these
+        continue;
+      }
+      if (key.contains("basedn")) {
+          // we know that basedn is empty
+          continue;
+        }
+      String p = b.getString(key);
+      String line = findMatchingLine(formSnippet, p);
+      String value = originalConfig.get(key);
+      assertValueCorrectlyPreset(p, line, value);
+    }
+  }
+  
   public void testValidateConfigGetSchemaSimpleAuth() throws Exception {
     SimpleMockLdapHandler basicMock = MockLdapHandlers.getBasicMock();
     LdapConnectorType lct = new LdapConnectorType(basicMock);

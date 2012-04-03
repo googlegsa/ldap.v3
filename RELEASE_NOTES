@@ -10,6 +10,46 @@ documentation.
 Web Site: http://code.google.com/p/google-enterprise-connector-ldap/
 
 
+Release 2.8.4, Jan 03, 2012
+===========================
+
+Introduction
+------------
+This is a preview maintenance release that improves quality without
+adding any new functionality. Users of previous releases are
+encouraged to upgrade.
+
+Summary of Changes
+------------------
+
+  * Fixed issue 5560499: LDAP Connector appears to have 3 min 
+    connection timeout. The fix provides the configurable timeout
+    in connectorType.xml. This timeout is used for connector 
+    configuration time. During traversal time, the default network 
+    time out will be used.
+
+  * Fixed issue 5699866: On LDAP Connector page de-selecting dn 
+    attribute de-selects some other attribute.
+
+  * Fixed issue 3096443: If no properties are selected in LDAP Connector
+    configuration, connector instance can't be saved. Fix provides
+    dn attribute as selected by default in the configuration form.
+
+  * Fixed issue 3096456: Empty base dn value blanks out all the fields.
+    Now the based dn field is mandatory, and displays missing values error
+    if no value is provided.
+
+  * Fixed issue 5552961: In LDAP Connector, there is no way to de-select 
+    attributes.
+
+Version Compatibility
+---------------------
+Connector instances created using versions 2.6.0 through 2.8.2 may be
+used with this version. This version works with Connector Manager
+version 2.8. Earlier versions of the Connector Manager will not work
+correctly with this version of the connector.
+
+
 Release 2.8.2, Oct 20, 2011
 ===========================
 
@@ -28,6 +68,7 @@ Summary of Changes
     attributes are now saved and indexed. Manual edits to the
     connector properties file to workaround this issue will be
     preserved in the upgrade.
+    
   * Fixed issue 4150942: Feeds stopped when the LDAP server was
     unavailable and did not resume until the connector was restarted.
     The connector now pauses after this error and retries until the

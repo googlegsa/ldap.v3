@@ -137,7 +137,7 @@ public class LdapConnectorType implements ConnectorType {
           new EnumField<Method>(ConfigName.METHOD.toString(), true,
           Method.class, Method.STANDARD);
       baseDnField =
-          new SingleLineField(ConfigName.BASEDN.toString(), false, false);
+          new SingleLineField(ConfigName.BASEDN.toString(), true, false);
       filterField =
           new SingleLineField(ConfigName.FILTER.toString(), true, false);
       schemaField =
