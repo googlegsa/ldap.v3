@@ -86,7 +86,15 @@ public class LdapConnectorTypeTest extends TestCase {
     SimpleMockLdapHandler basicMock = MockLdapHandlers.getBasicMock();
     LdapConnectorType lct = new LdapConnectorType(basicMock);
     ResourceBundle b = lct.getResourceBundle(Locale.US);
-    ImmutableMap<String, String> originalConfig = ImmutableMap.<String, String> builder().put("authtype", "ANONYMOUS").put("port", "389").put("hostname", "ldap.realistic-looking-domain.com").put("basedn", "ou=people,dc=example,dc=com").put("filter", "ou=people").build();
+    ImmutableMap<String, String> originalConfig =
+        ImmutableMap.<String, String>builder()
+            .put("authtype", "ANONYMOUS")
+            .put("configured", "false")
+            .put("port", "389")
+            .put("hostname", "ldap.realistic-looking-domain.com")
+            .put("basedn", "ou=people,dc=example,dc=com")
+            .put("filter", "ou=people")
+            .build();
     ConfigureResponse cr = lct.validateConfig(originalConfig, Locale.US, null);
     String formSnippet = cr.getFormSnippet();
     System.out.println(formSnippet);
@@ -108,7 +116,17 @@ public class LdapConnectorTypeTest extends TestCase {
     SimpleMockLdapHandler basicMock = MockLdapHandlers.getBasicMock();
     LdapConnectorType lct = new LdapConnectorType(basicMock);
     ResourceBundle b = lct.getResourceBundle(Locale.US);
-    ImmutableMap<String, String> originalConfig = ImmutableMap.<String, String> builder().put("authtype", "SIMPLE").put("username", "foo").put("password", "bar").put("port", "1389").put("hostname", "ldap.realistic-looking-domain.com").put("basedn", "ou=people,dc=example,dc=com").put("filter", "ou=people").build();
+    ImmutableMap<String, String> originalConfig =
+        ImmutableMap.<String, String>builder()
+            .put("authtype", "SIMPLE")
+            .put("configured", "false")
+            .put("username", "foo")
+            .put("password", "bar")
+            .put("port", "1389")
+            .put("hostname", "ldap.realistic-looking-domain.com")
+            .put("basedn", "ou=people,dc=example,dc=com")
+            .put("filter", "ou=people")
+            .build();
     ConfigureResponse cr = lct.validateConfig(originalConfig, Locale.US, null);
     String formSnippet = cr.getFormSnippet();
     System.out.println(formSnippet);
@@ -134,9 +152,30 @@ public class LdapConnectorTypeTest extends TestCase {
   public void testValidateConfigWithSchema() {
     SimpleMockLdapHandler basicMock = MockLdapHandlers.getBasicMock();
     LdapConnectorType lct = new LdapConnectorType(basicMock);
-    ImmutableMap<String, String> originalConfig = ImmutableMap.<String, String> builder().put("port", "").put("authtype", "ANONYMOUS").put("hostname", "ldap.realistic-looking-domain.com").put("googleConnectorName", "x").put("googleConnectorWorkDir", "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF/connectors/ldapConnector/x").put("password", "test").put("schema_10", "dn").put("username", "admin").put("schema_9", "employeestatus").put("schema_8", "employeenumber").put("method", "STANDARD").put("basedn", "ou=people,dc=example,dc=com").put("googleWorkDir", "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF").put("filter", "ou=people").build();
+    ImmutableMap<String, String> originalConfig =
+        ImmutableMap.<String, String>builder()
+            .put("port", "")
+            .put("authtype", "ANONYMOUS")
+            .put("configured", "true")
+            .put("hostname", "ldap.realistic-looking-domain.com")
+            .put("googleConnectorName", "x")
+            .put("googleConnectorWorkDir",
+                "/home/ziff/cats/ldap-tom/webapps/connector-manager/"
+                + "WEB-INF/connectors/ldapConnector/x")
+            .put("password", "test")
+            .put("schema_10", "dn")
+            .put("username", "admin")
+            .put("schema_9", "employeestatus")
+            .put("schema_8", "employeenumber")
+            .put("method", "STANDARD")
+            .put("basedn", "ou=people,dc=example,dc=com")
+            .put("googleWorkDir",
+                "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF")
+            .put("filter", "ou=people")
+            .build();
 
-    ImmutableMap<String, String> expectedDefaults = ImmutableMap.<String, String> builder().put("schema_key", "dn").build();
+    ImmutableMap<String, String> expectedDefaults =
+        ImmutableMap.of("schema_key", "dn");
 
     ConfigureResponse cr = lct.validateConfig(originalConfig, Locale.US, null);
 
@@ -326,10 +365,16 @@ public class LdapConnectorTypeTest extends TestCase {
     LdapConnectorType lct = new LdapConnectorType(basicMock);
     ResourceBundle b = lct.getResourceBundle(Locale.US);
     ImmutableMap<String, String> originalConfig =
-        ImmutableMap.<String, String>builder().put("authtype", "SIMPLE").put("username", "foo")
-            .put("password", "bar").put("port", "1389")
+        ImmutableMap.<String, String>builder()
+            .put("authtype", "SIMPLE")
+            .put("configured", "false")
+            .put("username", "foo")
+            .put("password", "bar")
+            .put("port", "1389")
             .put("hostname", "ldap.realistic-looking-domain.com")
-            .put("basedn", "ou=people,dc=example,dc=com").put("filter", "ou=people").build();
+            .put("basedn", "ou=people,dc=example,dc=com")
+            .put("filter", "ou=people")
+            .build();
     ConfigureResponse cr = lct.validateConfig(originalConfig, Locale.US, null);
     String formSnippet = cr.getFormSnippet();
     String message = cr.getMessage();
@@ -340,7 +385,13 @@ public class LdapConnectorTypeTest extends TestCase {
     assertBasicConfigElements(b, formSnippet);
 
     String line = findMatchingLine(formSnippet, "value=\"dn\"");
-    assertTrue("DN attrbute should be selected in formSnippet", line.contains("checked"));
+    assertTrue("DN attrbute should be selected in formSnippet",
+        line.contains("checked"));
+
+    String schemaValueLine =
+        findMatchingLine(formSnippet, "id = \'schemavalue\'");
+    assertTrue("DN attrbute should be in schemavalue hidden attribute",
+        schemaValueLine.contains("\"dn\""));
 
     ConnectorFieldsTest.validateXhtml(formSnippet);
     List<String> lines = findMatchingLines(formSnippet, "schema");
