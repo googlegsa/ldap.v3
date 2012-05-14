@@ -38,6 +38,7 @@ public class LdapConstants {
     METHOD("method"),
     BASEDN("basedn"),
     FILTER("filter"),
+    CONFIGURED("configured"),
     SCHEMA("schema"),
     SCHEMAVALUE("schemavalue"),
     SCHEMA_KEY("schema_key"), ;

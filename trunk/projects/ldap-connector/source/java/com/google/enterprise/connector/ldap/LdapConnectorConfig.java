@@ -214,9 +214,9 @@ public class LdapConnectorConfig {
       }
     }
 
-    if (schemaValue.size() > 0 && !schemaValue.contains(LdapHandler.DN_ATTRIBUTE)) {
-      schemaValue.add(LdapHandler.DN_ATTRIBUTE);
-    }
+    // always add dn attribute to schema. 'dn' checkbox is hidden so can't be 
+    // read and added to schemaValue in the code above.
+    schemaValue.add(LdapHandler.DN_ATTRIBUTE);
 
     try {
       configSchemaValue = (new JSONArray(schemaValue.toString())).toString();
@@ -292,7 +292,7 @@ public class LdapConnectorConfig {
   public String getSchemaKey() {
     return schemaKey;
   }
-  
+
   /**
    * Returns the string that represents the selected attributes in a json
    * understandable way. 
@@ -306,7 +306,7 @@ public class LdapConnectorConfig {
   static String getJsonStringForSelectedAttributes(
       Map <String, String> config) {
     String schemaValue = config.get(ConfigName.SCHEMAVALUE.toString());
-    if (schemaValue == null || schemaValue.trim().length() == 0) {
+    if (schemaValue == null || schemaValue.equals("[]")) {
       LOG.info("Trying to recover attributes from individual checkboxes");
       StringBuffer schemaKey = new StringBuffer();
       schemaKey.append(ConfigName.SCHEMA.toString()).append("_").append("\\d");

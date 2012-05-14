@@ -291,6 +291,18 @@ public class LdapConnectorType implements ConnectorType {
       // from the UI as one json string.
       String schemaValue = LdapConnectorConfig.
           getSchemaValueFromConfig(config);
+
+      // hidden field for 'configured'
+      buf.append("<tr style='display: none'><td>\n");
+      buf.append("<input type = 'hidden' id = '");
+      buf.append(ConfigName.CONFIGURED).append("'");
+      buf.append(" name = '").append(ConfigName.CONFIGURED);
+      buf.append("' value = '");
+      buf.append(isConfigured());
+      buf.append("' />");
+      buf.append("</td></tr>\n");
+
+      // hidden field for 'schemavalue'
       buf.append("<tr style='display: none'><td>\n");
       buf.append("<input type = 'hidden' id = 'schemavalue'");
       buf.append(" name = 'schemavalue' value = '").append(schemaValue);
@@ -422,6 +434,11 @@ public class LdapConnectorType implements ConnectorType {
         return new ConfigureResponse(null, getFormRows(null));
       }
 
+      if (!isConfigured()) {
+        config.put(ConfigName.CONFIGURED.toString(), "true");
+        return new ConfigureResponse(null, getFormRows(null), config);
+      }
+
       ensureConfigIsComplete(config);
 
       String errorMessageHtml;
@@ -440,6 +457,13 @@ public class LdapConnectorType implements ConnectorType {
         return new ConfigureResponse(bundle.getString(ErrorMessages.CONNECTOR_INSTANTIATION_FAILED
             .name()), getFormRows(null));
       }
+    }
+
+    /**
+     * Returns true if the connector has been configured
+     */
+    private boolean isConfigured() {
+      return Boolean.parseBoolean(config.get(ConfigName.CONFIGURED.toString()));
     }
 
     /**
