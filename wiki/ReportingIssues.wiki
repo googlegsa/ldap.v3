@@ -8,5 +8,5 @@ instructions on how to contact Google Enterprise Support.
 
 For unsupported issues, such as using the connectors without a Google Search
 Appliance, working with the source code, or to report problems with
-unsupported development builds, you can [http://../issues/list file an issue] on this code site. 
+unsupported development builds, you can [http://code.google.com/p/google-enterprise-connector-ldap/issues/list file an issue] on this code site. 
 Google may not respond to every issue.
