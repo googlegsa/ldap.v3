@@ -38,6 +38,7 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.naming.AuthenticationException;
 import javax.naming.AuthenticationNotSupportedException;
 import javax.naming.CommunicationException;
 import javax.naming.Context;
@@ -424,6 +425,8 @@ public class LdapHandler implements LdapHandlerI {
         }
       } catch (AuthenticationNotSupportedException e) {
         errors.put(LdapConnectionError.AuthenticationNotSupported, e.getMessage());
+      } catch (AuthenticationException e) {
+        errors.put(LdapConnectionError.AuthenticationException, e.getMessage());
       } catch (NamingException e) {
         errors.put(LdapConnectionError.NamingException, e.getMessage());
       }
