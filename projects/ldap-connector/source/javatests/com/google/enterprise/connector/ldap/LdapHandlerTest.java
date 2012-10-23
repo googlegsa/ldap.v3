@@ -16,7 +16,6 @@ package com.google.enterprise.connector.ldap;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.enterprise.connector.ldap.LdapConstants.AuthType;
 import com.google.enterprise.connector.ldap.LdapConstants.LdapConnectionError;
 import com.google.enterprise.connector.ldap.LdapConstants.Method;
 import com.google.enterprise.connector.ldap.LdapHandler.LdapConnectionSettings;
@@ -48,8 +47,6 @@ public class LdapHandlerTest extends TestCase {
   private static final String TEST_HOSTNAME_TIMEOUT;
   private static final Set<String> TEST_SCHEMA;
   private static final String TEST_SCHEMA_KEY;
-  private static final String TEST_HOSTNAME_BADPWD;
-  private static final String TEST_BINDINGDN_BADPWD;
 
   static {
     // TODO: Create a Properties wrapper that exposes only the test properties.
@@ -60,9 +57,6 @@ public class LdapHandlerTest extends TestCase {
     String schemaString = TEST_PROPERTIES.getProperty("schema");
     TEST_SCHEMA = Sets.newHashSet(schemaString.split(","));
     TEST_SCHEMA_KEY = TEST_PROPERTIES.getProperty("schema_key");
-    TEST_HOSTNAME_BADPWD = TEST_PROPERTIES.getProperty("hostname.badpassword");
-    TEST_BINDINGDN_BADPWD = 
-        TEST_PROPERTIES.getProperty("binding_dn.badpassword");
   }
 
   private static Properties getTestProperties() {
@@ -87,14 +81,6 @@ public class LdapHandlerTest extends TestCase {
 
   private static String getSchemaKey() {
     return TEST_SCHEMA_KEY;
-  }
-
-  private static String getBadPwdHostname() {
-    return TEST_HOSTNAME_BADPWD;
-  }
-
-  private static String getBadPwdBindingdn() {
-    return TEST_BINDINGDN_BADPWD;
   }
 
   public void testConnectivity() {
@@ -135,28 +121,6 @@ public class LdapHandlerTest extends TestCase {
     return settings;
   }
 
-  public void testBadPasswordConnectivity() {
-    LdapHandler handler = new LdapHandler();
-    handler.setLdapConnectionSettings(
-        makeBadPwdLdapConnectionSettings());
-    LdapContext ldapContext = handler.getLdapContext();
-    assertNull(ldapContext);
-    Map<LdapConnectionError, String> errors = handler.getErrors();
-    assertTrue(errors.keySet().contains(
-        LdapConnectionError.AuthenticationException));
-  }
-
-  private static LdapConnectionSettings makeBadPwdLdapConnectionSettings() {
-    String hostname = getBadPwdHostname();
-    int port = 389;
-    String baseDN = getBadPwdBindingdn();
-    String password = "wrongpassword";
-    LdapConnectionSettings settings =
-        new LdapConnectionSettings(Method.STANDARD, hostname, port, baseDN,
-            AuthType.SIMPLE, baseDN, password);
-    return settings;
-  }
-
   public void testTimeoutConnectivity() {
     LdapHandler handler = new LdapHandler();
     long beforeTime = System.currentTimeMillis();
@@ -165,7 +129,7 @@ public class LdapHandlerTest extends TestCase {
     LdapContext ldapContext = handler.getLdapContext();
     long afterTime = System.currentTimeMillis();
     assertEquals((afterTime - beforeTime), 10000, 100);
-    assertNull(ldapContext);
+    assertNull(ldapContext);    
   }
 
   private static LdapConnectionSettings makeTimedoutLdapConnectionSettings() {
