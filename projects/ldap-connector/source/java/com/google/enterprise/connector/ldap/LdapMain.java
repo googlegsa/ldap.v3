@@ -30,7 +30,7 @@ public class LdapMain {
   public static void main(String[] args) throws Exception {
     // From our class, get the jar file URL to this class file, and
     // make our way to the the Manifest located in that jar file.
-    Class thisClass = LdapMain.class;
+    Class<?> thisClass = LdapMain.class;
     String resName = "/" + thisClass.getName().replace('.', '/') + ".class";
 
     // Locate the Jar file containing our class.
