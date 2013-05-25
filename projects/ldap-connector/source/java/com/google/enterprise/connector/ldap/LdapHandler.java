@@ -28,6 +28,7 @@ import com.google.enterprise.connector.ldap.LdapConstants.Method;
 import com.google.enterprise.connector.ldap.LdapConstants.ServerType;
 
 import java.io.IOException;
+import java.net.NoRouteToHostException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Hashtable;
@@ -180,7 +181,15 @@ public class LdapHandler implements LdapHandlerI {
     LOG.fine("ctx:" + ctx);
 
     if (ctx == null) {
-      throw new IllegalStateException(ErrorMessages.UNKNOWN_CONNECTION_ERROR.toString());
+      Map<LdapConnectionError, String> errors = connection.getErrors();
+      if (errors != null
+          && errors.containsKey(LdapConnectionError.CommunicationException)) {
+        throw new LdapTransientException(
+            errors.get(LdapConnectionError.CommunicationException));
+      } else {
+        throw new IllegalStateException(
+            ErrorMessages.UNKNOWN_CONNECTION_ERROR.toString());
+      }
     }
 
     NamingEnumeration<SearchResult> ldapResults = null;
@@ -415,7 +424,10 @@ public class LdapHandler implements LdapHandlerI {
       } catch (CommunicationException e) {
         LOG.info("Communication error : " + e.toString());
 
-        if (e.getCause() instanceof SocketTimeoutException) {
+        if (e.getCause() instanceof NoRouteToHostException) {
+          errors.put(LdapConnectionError.CommunicationException,
+              e.getCause().getMessage());
+        } else if (e.getCause() instanceof SocketTimeoutException) {
           errors.put(LdapConnectionError.CommunicationExceptionTimeout, e.getCause().getMessage());
         } else if (e.getCause() instanceof UnknownHostException) {
           errors.put(LdapConnectionError.CommunicationExceptionUnknownhost, e.getCause()
