@@ -9,6 +9,56 @@ documentation.
 
 Web Site: http://code.google.com/p/google-enterprise-connector-ldap/
 
+Release 3.0.8, May 29, 2013
+===========================
+
+Introduction
+------------
+This is a maintenance release that improves quality without
+adding any new functionality. Users of previous releases are
+encouraged to review the changes below to determine whether 
+to upgrade.
+
+Summary of Changes
+------------------
+  * Fixed issue 8163039: Ldap connector fails to recover after 
+    java.net.NoRouteToHostException.
+  * Fixed issue 6513826: Add less verbose logging level for 
+    MBean messages.
+  * Fixed issue 3096499: Error/Warning messages displayed on LDAP 
+    connector configuration screen should be more precise.
+
+Version Compatibility
+---------------------
+Connector instances created using versions 2.8.2, 2.6.4, 2.6.0 
+and 3.0.0 may be used with this version. This version works with 
+Connector Manager version 3.0.0 or later. Earlier versions of 
+the Connector Manager will not work correctly with this version
+of the connector.
+
+
+Release 3.0.0, May 15, 2012
+===========================
+
+Introduction
+------------
+This is a maintenance release that improves quality without
+adding any new functionality. Users of previous releases are
+encouraged to upgrade.
+
+Summary of Changes
+------------------
+  * Fixed issue 3096443: If no properties are selected for
+    indexing while configuring LDAP connector , Connector instance
+    cannot be saved.
+
+Version Compatibility
+---------------------
+Connector instances created using versions 2.8.2, 2.6.4 and 2.6.0 may be
+used with this version. This version works with Connector Manager
+version 2.8.0 or later. Earlier versions of the Connector Manager 
+will not work correctly with this version of the connector.
+
 
 Release 2.8.2, Oct 20, 2011
 ===========================
