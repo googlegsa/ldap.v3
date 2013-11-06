@@ -25,6 +25,11 @@ public class LdapJsonDocumentFetcherTest extends JsonDocumentFetcherTestCase {
     return new LdapJsonDocumentFetcher(basicMock);
   }
 
+  public void testKeyValue() {
+    assertEquals(0x61, 'a');
+    assertEquals("616263", LdapJsonDocumentFetcher.cleanLdapKey("abc"));
+  }
+
   // we want to make sure that our key encoding method makes strings that are
   // url-safe. We demonstrate url-safety by url-encoding them and observing that
   // nothing has changed.
