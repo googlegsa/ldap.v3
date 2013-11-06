@@ -14,6 +14,7 @@
 
 package com.google.enterprise.connector.ldap;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Supplier;
@@ -75,7 +76,7 @@ public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
   
   private static Function<Entry<String, Multimap<String, String>>, Multimap<String, String>> addDocid =
       new Function<Entry<String, Multimap<String, String>>, Multimap<String, String>>() {
-    /* @Override */
+    @Override
     public Multimap<String, String> apply(Entry<String, Multimap<String, String>> e) {
       Multimap<String, String> person = ArrayListMultimap.create(e.getValue());
       String key = e.getKey();
@@ -86,9 +87,8 @@ public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
     }
   };
 
-  /* @Override */
+  @Override
   public Iterator<JsonDocument> iterator() {
-
     Map<String, Multimap<String, String>> results;
 
     try {
@@ -120,18 +120,9 @@ public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
   }
 
   /**
-   * Cleans the key before using it as the docid (which becomes part of the
-   * url), while preserving collation sequence.
-   *
-   * Due to some inconsistency of responsibility in url-encoding the key value,
-   * the diffing infrastructure is current encoding url-unsafe keys for delete
-   * in a different way from how it does it when they're new. TODO(Max): chase
-   * this phenomenon down and regularize it - a portion of the problem is in the
-   * CM and there are possibly some upgrade issues. In the meantime, since this
-   * connector is new, it's safest to handle it locally. This routine creates a
-   * url-safe encoding of the key that preserves collation sequence. Since the
-   * keys are already in sorted order, we need to encode them in a way that
-   * preserves order.
+   * Creates a URL-safe encoding of the key that preserves collation
+   * sequence. Since the keys are already in sorted order, we need to
+   * encode them in a way that preserves order.
    *
    * We do this by encoding to UTF-8, then as hex of the byte sequence. The
    * reasons why this preserves order are complicated. See
@@ -140,15 +131,9 @@ public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
    * JsonDocumentFetcherTestCase.
    **/
   public static String cleanLdapKey(String key) {
-    StringBuffer sb = new StringBuffer();
-    byte[] charArray;
-    try {
-      charArray = key.getBytes("UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      LOG.log(Level.SEVERE, "Impossible: UTF-8 not supported", e);
-      return key;
-    }
-    for (byte b : charArray) {
+    byte[] byteArray = key.getBytes(Charsets.UTF_8);
+    StringBuffer sb = new StringBuffer(byteArray.length * 2);
+    for (byte b : byteArray) {
       sb.append(String.format("%02x", b));
     }
     return sb.toString();
