@@ -14,7 +14,7 @@
 
 package com.google.enterprise.connector.ldap;
 
-import com.google.common.base.Charsets;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Supplier;
@@ -22,6 +22,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Multimap;
 import com.google.enterprise.connector.spi.SpiConstants;
+import com.google.enterprise.connector.util.Base16;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
@@ -120,22 +121,23 @@ public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
   }
 
   /**
-   * Creates a URL-safe encoding of the key that preserves collation
-   * sequence. Since the keys are already in sorted order, we need to
-   * encode them in a way that preserves order.
-   *
-   * We do this by encoding to UTF-8, then as hex of the byte sequence. The
-   * reasons why this preserves order are complicated. See
-   * http://unicode.org/reports/tr26/ for more, and note that this is tested by
-   * I18NLdapJsonDocumentFetcherTest and other tests that extend
-   * JsonDocumentFetcherTestCase.
+   * Creates a URL-safe encoding of the key that mostly preserves
+   * binary order.
+   * We do this by encoding to UTF-8, then hex encoding the byte sequence.
+   * This method does not preserve the sort order of the
+   * input strings in the presence of Unicode supplementary
+   * characters.
    **/
-  public static String cleanLdapKey(String key) {
-    byte[] byteArray = key.getBytes(Charsets.UTF_8);
-    StringBuffer sb = new StringBuffer(byteArray.length * 2);
-    for (byte b : byteArray) {
-      sb.append(String.format("%02x", b));
-    }
-    return sb.toString();
+  /*
+   * TODO(jlacey): The original assumption here (that Java's UTF-8 is
+   * really CESU-8) was wrong. This code only preserves order if the
+   * original order was compatible with Unicode code points, or no
+   * supplementary characters are used (which is the case in
+   * I18NLdapJsonDocumentFetcherTest and other tests that extend
+   * JsonDocumentFetcherTestCase).
+   */
+  @VisibleForTesting
+  static String cleanLdapKey(String key) {
+    return Base16.lowerCase().encode(key);
   }
 }
