@@ -563,7 +563,7 @@ public class LdapConnectorType implements ConnectorType {
     return resourceBundle;
   }
 
-  /* @Override */
+  @Override
   public ConfigureResponse getConfigForm(Locale locale) {
     ConfigureResponse configureResponse;
     ResourceBundle resourceBundle = getResourceBundle(locale);
@@ -576,7 +576,7 @@ public class LdapConnectorType implements ConnectorType {
     return configureResponse;
   }
 
-  /* @Override */
+  @Override
   public ConfigureResponse getPopulatedConfigForm(Map<String, String> config, Locale locale) {
     if (LOG.isLoggable(Level.FINE)) {
       String string = dumpConfigToString(config);
@@ -590,7 +590,7 @@ public class LdapConnectorType implements ConnectorType {
     return res;
   }
 
-  /* @Override */
+  @Override
   public ConfigureResponse validateConfig(Map<String, String> config, Locale locale,
       ConnectorFactory factory) {
     if (LOG.isLoggable(Level.FINE)) {
