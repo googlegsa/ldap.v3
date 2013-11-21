@@ -42,7 +42,7 @@ public class LdapPerson implements DocumentHandle, DocumentSnapshot {
   }
 
   public static Function<JsonDocument, LdapPerson> factoryFunction = new Function<JsonDocument, LdapPerson>() {
-    /* @Override */
+    @Override
     public LdapPerson apply(JsonDocument personDoc) {
       return new LdapPerson(personDoc);
     }
@@ -68,17 +68,17 @@ public class LdapPerson implements DocumentHandle, DocumentSnapshot {
     }
   }
 
-  /* @Override */
+  @Override
   public Document getDocument() {
     return document;
   }
 
-  /* @Override */
+  @Override
   public String getDocumentId() {
     return documentId;
   }
 
-  /* @Override */
+  @Override
   public LdapPerson getUpdate(DocumentSnapshot onGsa) {
     // the diffing framework sends in a null to indicate that it hasn't seen
     // this snapshot before. So we return the corresponding Handle (in our case,

@@ -28,7 +28,7 @@ public class LdapPersonFactory implements DocumentHandleFactory, DocumentSnapsho
     return INSTANCE;
   }
 
-  /* @Override */
+  @Override
   public LdapPerson fromString(String stringForm) {
     return new LdapPerson(stringForm);
   }

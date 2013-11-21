@@ -73,7 +73,7 @@ public class MockLdapHandlers {
       return schemaKeys;
     }
 
-    /* @Override */
+    @Override
     public void setLdapConnectionSettings(LdapConnectionSettings ldapConnectionSettings) {
       String hostname = ldapConnectionSettings.getHostname();
       if (hostname == null || hostname.trim().length() == 0) {
@@ -83,7 +83,7 @@ public class MockLdapHandlers {
       }
     }
 
-    /* @Override */
+    @Override
     public Map<LdapConnectionError, String> getErrors() {
       if (!isValid) {
         return ImmutableMap.of(LdapConnectionError.NamingException, "from mock handler");
@@ -91,7 +91,7 @@ public class MockLdapHandlers {
       return ImmutableMap.of();
     }
 
-    /* @Override */
+    @Override
     public void setQueryParameters(LdapRule rule, Set<String> schema, String schemaKey,
         int maxResults) {
       // accepts any query settings

@@ -38,13 +38,13 @@ public class LdapPersonRepository implements SnapshotRepository<LdapPerson> {
     this.personFetcher = personFetcher;
   }
 
-  /* @Override */
+  @Override
   public Iterator<LdapPerson> iterator() throws SnapshotRepositoryRuntimeException {
     final Function<JsonDocument, LdapPerson> f = new LoggingFunction();
     return Iterators.transform(personFetcher.iterator(), f);
   }
 
-  /* @Override */
+  @Override
   public String getName() {
     return LdapPersonRepository.class.getName();
   }
@@ -52,7 +52,7 @@ public class LdapPersonRepository implements SnapshotRepository<LdapPerson> {
   private static class LoggingFunction implements Function<JsonDocument, LdapPerson> {
     private int count = 0;
 
-    /* @Override */
+    @Override
     public LdapPerson apply(JsonDocument jdoc) {
       LdapPerson p = LdapPerson.factoryFunction.apply(jdoc);
       if (LOG.isLoggable(Level.FINER)) {

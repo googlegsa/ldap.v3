@@ -61,7 +61,7 @@ public class JsonDocument extends SimpleDocument {
 
   public static Function<Multimap<String, String>, JsonDocument> buildFromMultimap =
     new Function<Multimap<String, String>, JsonDocument>() {
-    /* @Override */
+    @Override
     public JsonDocument apply(Multimap<String, String> person) {
       return buildJson(person);
     }

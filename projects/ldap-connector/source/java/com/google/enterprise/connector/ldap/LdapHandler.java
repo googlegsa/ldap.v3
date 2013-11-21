@@ -84,7 +84,7 @@ public class LdapHandler implements LdapHandlerI {
   private LdapConnection connection = null;
 
   private static Function<String, String> toLower = new Function<String, String>() {
-    /* @Override */
+    @Override
     public String apply(String s) {
       return s.toLowerCase();
     }
@@ -112,14 +112,14 @@ public class LdapHandler implements LdapHandlerI {
     this.maxResults = maxResults;
   }
 
-  /* @Override */
+  @Override
   public void setLdapConnectionSettings(LdapConnectionSettings ldapConnectionSettings) {
     this.ldapConnectionSettings = ldapConnectionSettings;
     LOG.fine("settings " + this.ldapConnectionSettings);
     connection = new LdapConnection(ldapConnectionSettings, getConnectionTimeout());
   }
 
-  /* @Override */
+  @Override
   public Map<LdapConnectionError, String> getErrors() {
     if (connection != null) {
       return connection.getErrors();
