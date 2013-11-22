@@ -24,7 +24,6 @@ import com.google.common.collect.Multimap;
 import com.google.enterprise.connector.spi.SpiConstants;
 import com.google.enterprise.connector.util.Base16;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;

@@ -25,8 +25,6 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 import junit.framework.TestCase;
 
-import org.json.JSONException;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Locale;

@@ -16,7 +16,6 @@ package com.google.enterprise.connector.ldap;
 
 import com.google.enterprise.connector.ldap.MockLdapHandlers.SimpleMockLdapHandler;
 
-
 public class I18NLdapJsonDocumentFetcherTest extends JsonDocumentFetcherTestCase {
   @Override
   public JsonDocumentFetcher setJsonDocumentFetcher() {

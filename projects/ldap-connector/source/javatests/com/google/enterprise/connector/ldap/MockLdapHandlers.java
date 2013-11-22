@@ -28,8 +28,9 @@ import com.google.enterprise.connector.ldap.LdapHandler.LdapRule;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
+
 import javax.naming.CommunicationException;
 
 public class MockLdapHandlers {

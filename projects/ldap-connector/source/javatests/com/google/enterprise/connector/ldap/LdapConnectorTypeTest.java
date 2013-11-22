@@ -22,6 +22,8 @@ import com.google.enterprise.connector.ldap.ConnectorFields.AbstractField;
 import com.google.enterprise.connector.ldap.MockLdapHandlers.SimpleMockLdapHandler;
 import com.google.enterprise.connector.spi.ConfigureResponse;
 
+import junit.framework.TestCase;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -29,8 +31,6 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import junit.framework.TestCase;
 
 public class LdapConnectorTypeTest extends TestCase {
 
