@@ -23,8 +23,8 @@ import com.google.common.collect.Sets;
 import com.google.enterprise.connector.ldap.LdapSchemaFinder.SchemaResult.SchemaResultError;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * Uses an {@code LdapHandler} to find the schema of a set of results, by

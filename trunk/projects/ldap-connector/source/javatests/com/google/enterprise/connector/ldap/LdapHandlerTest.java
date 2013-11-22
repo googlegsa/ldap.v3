@@ -26,9 +26,9 @@ import com.google.enterprise.connector.ldap.LdapHandler.LdapRule.Scope;
 import junit.framework.TestCase;
 
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import javax.naming.ldap.LdapContext;
 
