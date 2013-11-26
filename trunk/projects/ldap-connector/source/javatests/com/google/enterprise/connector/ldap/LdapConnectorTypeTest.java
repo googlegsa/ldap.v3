@@ -21,6 +21,7 @@ import com.google.common.collect.Sets;
 import com.google.enterprise.connector.ldap.ConnectorFields.AbstractField;
 import com.google.enterprise.connector.ldap.MockLdapHandlers.SimpleMockLdapHandler;
 import com.google.enterprise.connector.spi.ConfigureResponse;
+import com.google.enterprise.connector.util.XmlParseUtil;
 
 import junit.framework.TestCase;
 
@@ -53,7 +54,7 @@ public class LdapConnectorTypeTest extends TestCase {
     assertTrue(configData == null || configData.isEmpty());
 
     String formSnippet = cr.getFormSnippet();
-    ConnectorFieldsTest.validateXhtml(formSnippet);
+    XmlParseUtil.validateXhtml(formSnippet);
     assertBasicConfigElements(b, formSnippet);
 
     // TODO: This is fragile because it always matches the two hidden
@@ -104,7 +105,7 @@ public class LdapConnectorTypeTest extends TestCase {
     assertTrue(configData == null || configData.isEmpty());
 
     assertBasicConfigElements(b, formSnippet);
-    ConnectorFieldsTest.validateXhtml(formSnippet);
+    XmlParseUtil.validateXhtml(formSnippet);
 
     // TODO: This is fragile because it always matches the two hidden
     // JavaScript handling.
@@ -140,7 +141,7 @@ public class LdapConnectorTypeTest extends TestCase {
     String line = findMatchingLine(formSnippet, "SIMPLE");
     assertTrue("SIMPLE should be selected", line.contains("selected"));
 
-    ConnectorFieldsTest.validateXhtml(formSnippet);
+    XmlParseUtil.validateXhtml(formSnippet);
     List<String> lines = findMatchingLines(formSnippet, "schema");
     assertTrue(0 < lines.size());
   }
@@ -294,7 +295,7 @@ public class LdapConnectorTypeTest extends TestCase {
     assertTrue(message == null || message.length() < 1);
 
     String formSnippet = cr.getFormSnippet();
-    ConnectorFieldsTest.validateXhtml(formSnippet);
+    XmlParseUtil.validateXhtml(formSnippet);
 
     assertBasicConfigElements(b, formSnippet);
 
@@ -393,7 +394,7 @@ public class LdapConnectorTypeTest extends TestCase {
     assertTrue("DN attrbute should be in schemavalue hidden attribute",
         schemaValueLine.contains("\"dn\""));
 
-    ConnectorFieldsTest.validateXhtml(formSnippet);
+    XmlParseUtil.validateXhtml(formSnippet);
     List<String> lines = findMatchingLines(formSnippet, "schema");
     assertTrue(0 < lines.size());
   }

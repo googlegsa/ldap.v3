@@ -53,6 +53,7 @@ public class MockLdapHandlers {
       this.schemaKeys = schemaKeys;
     }
 
+    @Override
     public Map<String, Multimap<String, String>> get() {
       if (!isValid) {
         throw new IllegalStateException("no valid config");
@@ -223,17 +224,21 @@ public class MockLdapHandlers {
       this(repositories, false);
     }
 
+    @Override
     public Map<LdapConnectionError, String> getErrors() {
       return ImmutableMap.of();
     }
 
+    @Override
     public void setLdapConnectionSettings(LdapConnectionSettings ldapConnectionSettings) {
     }
 
+    @Override
     public void setQueryParameters(LdapRule rule, Set<String> schema, String schemaKey,
         int maxResults) {
     }
 
+    @Override
     public Map<String, Multimap<String, String>> get() {
       if (repoIndex >= repositories.size()) {
         if (cycle) {
@@ -264,17 +269,21 @@ public class MockLdapHandlers {
       this(repositories, false);
     }
 
+    @Override
     public Map<LdapConnectionError, String> getErrors() {
       return ImmutableMap.of();
     }
 
+    @Override
     public void setLdapConnectionSettings(LdapConnectionSettings ldapConnectionSettings) {
     }
 
+    @Override
     public void setQueryParameters(LdapRule rule, Set<String> schema, String schemaKey,
         int maxResults) {
     }
 
+    @Override
     public Map<String, Multimap<String, String>> get() {
       if (repoIndex >= repositories.size()) {
         if (cycle) {
