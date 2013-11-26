@@ -28,6 +28,7 @@ public class LdapAuthorizationManager implements AuthorizationManager {
   /**
    * Throws an {@code UnsupportedOperationException}
    */
+  @Override
   public Collection<AuthorizationResponse> authorizeDocids(
       Collection<String> arg0, AuthenticationIdentity arg1) {
     throw new UnsupportedOperationException();

@@ -101,6 +101,7 @@ public class LdapHandler implements LdapHandlerI {
     return this.ldapConnectionTimeout;
   }
 
+  @Override
   public void setQueryParameters(LdapRule rule, Set<String> schema, String schemaKey, int maxResults) {
     this.rule = rule;
     this.schemaKey = schemaKey;
@@ -162,6 +163,7 @@ public class LdapHandler implements LdapHandlerI {
    *         although in practice this is rare (except for a few attributes,
    *         like email aliases).
    */
+  @Override
   public Map<String, Multimap<String, String>> get() {
     LOG.fine("entering get " + ldapConnectionSettings);
 
