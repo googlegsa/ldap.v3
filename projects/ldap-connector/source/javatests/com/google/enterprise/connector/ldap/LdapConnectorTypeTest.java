@@ -18,10 +18,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.enterprise.connector.ldap.ConnectorFields.AbstractField;
 import com.google.enterprise.connector.ldap.MockLdapHandlers.SimpleMockLdapHandler;
 import com.google.enterprise.connector.spi.ConfigureResponse;
 import com.google.enterprise.connector.util.XmlParseUtil;
+import com.google.enterprise.connector.util.connectortype.ConnectorFields.AbstractField;
 
 import junit.framework.TestCase;
 
@@ -286,6 +286,13 @@ public class LdapConnectorTypeTest extends TestCase {
 
     ImmutableMap<String, String> originalConfig = ImmutableMap.<String, String> builder().put("googlePropertiesVersion", "3").put("authtype", "ANONYMOUS").put("hostname", "ldap.realistic-looking-domain.com").put("googleConnectorName", "x").put("googleConnectorWorkDir", "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF/connectors/ldapConnector/x").put("password", "test").put("schema_10", "dn").put("username", "admin").put("schema_9", "employeestatus").put("schema_8", "employeenumber").put("method", "STANDARD").put("basedn", "ou=people,dc=example,dc=com").put("googleWorkDir", "/home/ziff/cats/ldap-tom/webapps/connector-manager/WEB-INF").put("filter", "ou=people").build();
 
+    // The selected schema elements are mapped to the start of the numbering.
+    // dn is always schema_0.
+    ImmutableMap<String, String> selectedSchemaKeys = ImmutableMap.of(
+        "schema_8", "schema_1",
+        "schema_9", "schema_2",
+        "schema_10", "schema_3");
+
     ConfigureResponse cr = lct.getPopulatedConfigForm(originalConfig, Locale.US);
 
     Map<String, String> configData = cr.getConfigData();
@@ -304,14 +311,18 @@ public class LdapConnectorTypeTest extends TestCase {
         // this is a hidden config item that we don't expect to see in the form
         continue;
       }
+      String inputName;
+      String line;
       if (key.contains("schema_") && !key.equals("schema_key")) {
-        // TODO: find a way to test these
-        continue;
+        inputName = selectedSchemaKeys.get(key);
+        line = findMatchingLine(formSnippet, inputName);
+        assertTrue(line, line.contains("onclick"));
+      } else {
+        inputName = b.getString(key);
+        line = findMatchingLine(formSnippet, inputName);
       }
-      String p = b.getString(key);
-      String line = findMatchingLine(formSnippet, p);
       String value = originalConfig.get(key);
-      assertValueCorrectlyPreset(p, line, value);
+      assertValueCorrectlyPreset(inputName, line, value);
     }
   }
 
@@ -386,12 +397,14 @@ public class LdapConnectorTypeTest extends TestCase {
     assertBasicConfigElements(b, formSnippet);
 
     String line = findMatchingLine(formSnippet, "value=\"dn\"");
-    assertTrue("DN attrbute should be selected in formSnippet",
+    assertTrue("DN attribute should be selected in formSnippet",
         line.contains("checked"));
+    assertTrue("DN attribute should be disabled in formSnippet",
+        line.contains("disabled"));
 
     String schemaValueLine =
         findMatchingLine(formSnippet, "id = \'schemavalue\'");
-    assertTrue("DN attrbute should be in schemavalue hidden attribute",
+    assertTrue("DN attribute should be in schemavalue hidden attribute",
         schemaValueLine.contains("\"dn\""));
 
     XmlParseUtil.validateXhtml(formSnippet);
