@@ -17,11 +17,6 @@ package com.google.enterprise.connector.ldap;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import com.google.enterprise.connector.ldap.ConnectorFields.AbstractField;
-import com.google.enterprise.connector.ldap.ConnectorFields.EnumField;
-import com.google.enterprise.connector.ldap.ConnectorFields.IntField;
-import com.google.enterprise.connector.ldap.ConnectorFields.MultiCheckboxField;
-import com.google.enterprise.connector.ldap.ConnectorFields.SingleLineField;
 import com.google.enterprise.connector.ldap.LdapConstants.AuthType;
 import com.google.enterprise.connector.ldap.LdapConstants.ConfigName;
 import com.google.enterprise.connector.ldap.LdapConstants.ErrorMessages;
@@ -33,6 +28,11 @@ import com.google.enterprise.connector.ldap.LdapSchemaFinder.SchemaResult;
 import com.google.enterprise.connector.spi.ConfigureResponse;
 import com.google.enterprise.connector.spi.ConnectorFactory;
 import com.google.enterprise.connector.spi.ConnectorType;
+import com.google.enterprise.connector.util.connectortype.ConnectorFields.AbstractField;
+import com.google.enterprise.connector.util.connectortype.ConnectorFields.EnumField;
+import com.google.enterprise.connector.util.connectortype.ConnectorFields.IntField;
+import com.google.enterprise.connector.util.connectortype.ConnectorFields.MultiCheckboxField;
+import com.google.enterprise.connector.util.connectortype.ConnectorFields.SingleLineField;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -142,7 +142,16 @@ public class LdapConnectorType implements ConnectorType {
           new SingleLineField(ConfigName.FILTER.toString(), true, false);
       schemaField =
           new MultiCheckboxField(ConfigName.SCHEMA.toString(), false, null,
-          SCHEMA_INSTRUCTIONS, ONCLICK_FUNCTION_CALL);
+          SCHEMA_INSTRUCTIONS, new MultiCheckboxField.Callback() {
+              @Override public Map<String, String> getAttributes(String key) {
+                Map<String, String> attributes = Maps.newHashMap();
+                attributes.put("onclick", ONCLICK_FUNCTION_CALL);
+                if (key.equalsIgnoreCase(LdapHandler.DN_ATTRIBUTE)) {
+                  attributes.put("disabled", "disabled");
+                }
+                return attributes;
+              }
+            });
 
       fields = ImmutableList.<AbstractField> of(
           hostField,
@@ -159,7 +168,7 @@ public class LdapConnectorType implements ConnectorType {
       // to destabilize the code-base
 
       for (AbstractField field: fields) {
-        field.boldLabel = false;
+        field.setBoldLabel(false);
       }
 
       this.bundle = bundle;
