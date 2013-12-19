@@ -15,6 +15,7 @@
   <property name="COMPILE_TARGET" value="1.6" />
   <property name="COMPILE_BOOTCLASSPATH" value="${build.bootclasspath}" />
 
+  <property name="downloads.dir" value="downloads" />
   <property name="build.dir" value="build" />
   <property name="build-prod.dir" value="${build.dir}/prod" />
   <property name="build-prod-config.dir" value="${build-prod.dir}/config" />
@@ -289,10 +290,17 @@
     <delete file="cobertura.ser" />
   </target>
 
+  <target name="init-downloads" depends="svn.svn-branch">
+    <property name="downloads.prefix" value="connector-ldap-${svn.branch}" />
+    <property name="repackage.prefix" value="connector-ldap-${version}"/>
+
+    <mkdir dir="${downloads.dir}" />
+  </target>
+
   <target name="bin-archive" 
-    depends="init,compile_prod,jar_prod">
-    <property name="bin.archive" value="connector-ldap-${svn.branch}" />
-    <zip destfile="${build.dir}/${bin.archive}.zip">
+    depends="init,compile_prod,jar_prod,init-downloads">
+    <property name="bin.archive" value="${downloads.prefix}" />
+    <zip destfile="${downloads.dir}/${bin.archive}.zip">
       <zipfileset dir="${jar-prod.dir}" 
         prefix="${bin.archive}" />
         <zipfileset file="../../RELEASE_NOTES" 
@@ -302,20 +310,12 @@
         <zipfileset file="../../COPYING" 
            prefix="${bin.archive}/License" />
     </zip>
-    <tar destfile="${build.dir}/${bin.archive}.tar.gz" 
-      compression="gzip">
-      <zipfileset src="${build.dir}/${bin.archive}.zip"/>
-    </tar>
-
-    <checksum algorithm="SHA-1">
-      <fileset dir="${build.dir}">
-        <include name="${bin.archive}*" />
-      </fileset>
-    </checksum>
+    <checksum algorithm="SHA-1" file="${downloads.dir}/${bin.archive}.zip"/>
   </target>
 
-  <target name="src-archive" depends="init,compile_prod,jar_prod">
-    <property name="src.archive" value="connector-ldap-${svn.branch}-src" />
+  <target name="src-archive"
+          depends="init,compile_prod,jar_prod,init-downloads">
+    <property name="src.archive" value="${downloads.prefix}-src" />
 
     <!-- Use 'svn export' to create a clean version of the source tree
          in the build dir.  You can adjust the behaviour of this by setting
@@ -341,23 +341,21 @@
       <arg line="export ${svn.export.revision.arg} ${svn.export.source} ${svn.export.dir}" />
     </exec>
 
-    <!-- Create .zip and .tar.gz archives of the exported source tree. 
+    <!-- Create .zip archive of the exported source tree.
          Also creates SHA-1 checksum -->
-    <zip destfile="${build.dir}/${src.archive}.zip">
+    <zip destfile="${downloads.dir}/${src.archive}.zip">
           <zipfileset dir="${svn.export.dir}" prefix="${src.archive}" />
     </zip>
-    <tar destfile="${build.dir}/${src.archive}.tar.gz"
-         longfile="gnu" compression="gzip">
-      <zipfileset src="${build.dir}/${src.archive}.zip"/>
-    </tar>
+    <checksum algorithm="SHA-1" file="${downloads.dir}/${src.archive}.zip"/>
 
-    <checksum algorithm="SHA-1">
-      <fileset dir="${build.dir}">
-        <include name="${src.archive}*" />
-      </fileset>
-    </checksum>
- 
     <delete dir="${svn.export.dir}" quiet="true" />
+  </target>
+
+  <target name="repackage" depends="init-downloads"
+          description="Repackage release candidate files for release.">
+    <repackage-downloads downloads.dir="${downloads.dir}"
+                         downloads.prefix="${downloads.prefix}"
+                         repackage.prefix="${repackage.prefix}" />
   </target>
 
   <target name="run_code_coverage" depends="run_tests,coverage-report,alternate-coverage-report" description="Compile, instrument ourself, run the tests and generate JUnit and coverage reports."/>
