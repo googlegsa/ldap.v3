@@ -14,8 +14,10 @@
 
 package com.google.enterprise.connector.ldap;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.enterprise.connector.instantiator.EncryptedPropertyPlaceholderConfigurer;
 import com.google.enterprise.connector.ldap.LdapConstants.AuthType;
 import com.google.enterprise.connector.ldap.LdapConstants.LdapConnectionError;
 import com.google.enterprise.connector.ldap.LdapConstants.Method;
@@ -50,10 +52,25 @@ public class LdapHandlerTest extends TestCase {
   private static final String TEST_SCHEMA_KEY;
   private static final String TEST_HOSTNAME_BADPWD;
   private static final String TEST_BINDINGDN_BADPWD;
+  private static final String TEST_USER;
+  private static final String TEST_PASSWORD;
 
   static {
     // TODO: Create a Properties wrapper that exposes only the test properties.
+    // TODO(jlacey): Create a facade interface in CM util.testing package for
+    // decrypting encrypted properties.
     TEST_PROPERTIES = System.getProperties();
+    // Set keystore path and decrypt properties.
+    String cmKeyStore =
+        TEST_PROPERTIES.getProperty("connector_manager.keystore");
+    if (Strings.isNullOrEmpty(cmKeyStore)) {
+      TEST_PASSWORD = TEST_PROPERTIES.getProperty("password");
+    } else {
+      EncryptedPropertyPlaceholderConfigurer.setKeyStorePath(cmKeyStore);
+      TEST_PASSWORD = EncryptedPropertyPlaceholderConfigurer.decryptString(
+          TEST_PROPERTIES.getProperty("password"));
+    }
+
     TEST_FILTER = TEST_PROPERTIES.getProperty("filter");
     TEST_HOSTNAME = TEST_PROPERTIES.getProperty("hostname");
     TEST_HOSTNAME_TIMEOUT = TEST_PROPERTIES.getProperty("hostname.timeout");
@@ -63,6 +80,7 @@ public class LdapHandlerTest extends TestCase {
     TEST_HOSTNAME_BADPWD = TEST_PROPERTIES.getProperty("hostname.badpassword");
     TEST_BINDINGDN_BADPWD = 
         TEST_PROPERTIES.getProperty("binding_dn.badpassword");
+    TEST_USER = TEST_PROPERTIES.getProperty("user");
   }
 
   private static Properties getTestProperties() {
@@ -109,8 +127,14 @@ public class LdapHandlerTest extends TestCase {
     String hostname = LdapHandlerTest.getHostname();
     int port = 389;
     String baseDN = LdapHandlerTest.getTestProperties().getProperty("basedn");
-    LdapConnectionSettings settings =
-        new LdapConnectionSettings(method, hostname, port, baseDN);
+    LdapConnectionSettings settings;
+    if (Strings.isNullOrEmpty(TEST_USER)
+        || Strings.isNullOrEmpty(TEST_PASSWORD)) {
+      settings = new LdapConnectionSettings(method, hostname, port, baseDN);
+    } else {
+      settings = new LdapConnectionSettings(method, hostname, port, baseDN,
+          AuthType.SIMPLE, TEST_USER, TEST_PASSWORD);
+    }
     return settings;
   }
 
