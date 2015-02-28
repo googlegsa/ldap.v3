@@ -43,76 +43,26 @@ import javax.naming.ldap.LdapContext;
  */
 public class LdapHandlerTest extends TestCase {
 
-  private static final Properties TEST_PROPERTIES;
+  private static final Properties TEST_PROPERTIES = System.getProperties();
 
-  private static final String TEST_FILTER;
-  private static final String TEST_HOSTNAME;
-  private static final String TEST_HOSTNAME_TIMEOUT;
-  private static final Set<String> TEST_SCHEMA;
-  private static final String TEST_SCHEMA_KEY;
-  private static final String TEST_HOSTNAME_BADPWD;
-  private static final String TEST_BINDINGDN_BADPWD;
-  private static final String TEST_USER;
-  private static final String TEST_PASSWORD;
-
-  static {
-    // TODO: Create a Properties wrapper that exposes only the test properties.
+  private static String getPassword() {
     // TODO(jlacey): Create a facade interface in CM util.testing package for
     // decrypting encrypted properties.
-    TEST_PROPERTIES = System.getProperties();
     // Set keystore path and decrypt properties.
     String cmKeyStore =
         TEST_PROPERTIES.getProperty("connector_manager.keystore");
     if (Strings.isNullOrEmpty(cmKeyStore)) {
-      TEST_PASSWORD = TEST_PROPERTIES.getProperty("password");
+      return TEST_PROPERTIES.getProperty("password");
     } else {
       EncryptedPropertyPlaceholderConfigurer.setKeyStorePath(cmKeyStore);
-      TEST_PASSWORD = EncryptedPropertyPlaceholderConfigurer.decryptString(
+      return EncryptedPropertyPlaceholderConfigurer.decryptString(
           TEST_PROPERTIES.getProperty("password"));
     }
-
-    TEST_FILTER = TEST_PROPERTIES.getProperty("filter");
-    TEST_HOSTNAME = TEST_PROPERTIES.getProperty("hostname");
-    TEST_HOSTNAME_TIMEOUT = TEST_PROPERTIES.getProperty("hostname.timeout");
-    String schemaString = TEST_PROPERTIES.getProperty("schema");
-    TEST_SCHEMA = Sets.newHashSet(schemaString.split(","));
-    TEST_SCHEMA_KEY = TEST_PROPERTIES.getProperty("schema_key");
-    TEST_HOSTNAME_BADPWD = TEST_PROPERTIES.getProperty("hostname.badpassword");
-    TEST_BINDINGDN_BADPWD = 
-        TEST_PROPERTIES.getProperty("binding_dn.badpassword");
-    TEST_USER = TEST_PROPERTIES.getProperty("user");
   }
 
-  private static Properties getTestProperties() {
-    return TEST_PROPERTIES;
-  }
-
-  private static String getTestFilter() {
-    return TEST_FILTER;
-  }
-
-  private static String getHostname() {
-    return TEST_HOSTNAME;
-  }
-
-  private static String getTimeoutHostname() {
-    return TEST_HOSTNAME_TIMEOUT;
-  }
-  
   private static Set<String> getSchema() {
-    return Sets.newHashSet(TEST_SCHEMA);
-  }
-
-  private static String getSchemaKey() {
-    return TEST_SCHEMA_KEY;
-  }
-
-  private static String getBadPwdHostname() {
-    return TEST_HOSTNAME_BADPWD;
-  }
-
-  private static String getBadPwdBindingdn() {
-    return TEST_BINDINGDN_BADPWD;
+    String schemaString = TEST_PROPERTIES.getProperty("schema");
+    return Sets.newHashSet(schemaString.split(","));
   }
 
   public void testConnectivity() {
@@ -124,16 +74,17 @@ public class LdapHandlerTest extends TestCase {
 
   private static LdapConnectionSettings makeLdapConnectionSettings() {
     Method method = Method.STANDARD;
-    String hostname = LdapHandlerTest.getHostname();
+    String hostname = TEST_PROPERTIES.getProperty("hostname");
     int port = 389;
-    String baseDN = LdapHandlerTest.getTestProperties().getProperty("basedn");
+    String baseDN = TEST_PROPERTIES.getProperty("basedn");
     LdapConnectionSettings settings;
-    if (Strings.isNullOrEmpty(TEST_USER)
-        || Strings.isNullOrEmpty(TEST_PASSWORD)) {
+    String user = TEST_PROPERTIES.getProperty("user");
+    String password = getPassword();
+    if (Strings.isNullOrEmpty(user) || Strings.isNullOrEmpty(password)) {
       settings = new LdapConnectionSettings(method, hostname, port, baseDN);
     } else {
       settings = new LdapConnectionSettings(method, hostname, port, baseDN,
-          AuthType.SIMPLE, TEST_USER, TEST_PASSWORD);
+          AuthType.SIMPLE, user, password);
     }
     return settings;
   }
@@ -153,7 +104,7 @@ public class LdapHandlerTest extends TestCase {
     Method method = Method.STANDARD;
     String hostname = "not-ldap.xyzzy.foo";
     int port = 389;
-    String baseDN = LdapHandlerTest.getTestProperties().getProperty("basedn");
+    String baseDN = TEST_PROPERTIES.getProperty("basedn");
     LdapConnectionSettings settings =
         new LdapConnectionSettings(method, hostname, port, baseDN);
     return settings;
@@ -171,9 +122,9 @@ public class LdapHandlerTest extends TestCase {
   }
 
   private static LdapConnectionSettings makeBadPwdLdapConnectionSettings() {
-    String hostname = getBadPwdHostname();
+    String hostname = TEST_PROPERTIES.getProperty("hostname.badpassword");
     int port = 389;
-    String baseDN = getBadPwdBindingdn();
+    String baseDN = TEST_PROPERTIES.getProperty("binding_dn.badpassword");
     String password = "wrongpassword";
     LdapConnectionSettings settings =
         new LdapConnectionSettings(Method.STANDARD, hostname, port, baseDN,
@@ -195,14 +146,14 @@ public class LdapHandlerTest extends TestCase {
   private static LdapConnectionSettings makeTimedoutLdapConnectionSettings() {
     Method method = Method.STANDARD;
     // hostname needs to be valid but unreachable and times out for this test
-    String hostname = getTimeoutHostname();
+    String hostname = TEST_PROPERTIES.getProperty("hostname.timeout");
     int port = 389;
-    String baseDN = LdapHandlerTest.getTestProperties().getProperty("basedn");
+    String baseDN = TEST_PROPERTIES.getProperty("basedn");
     LdapConnectionSettings settings =
         new LdapConnectionSettings(method, hostname, port, baseDN);
     return settings;
   }  
-  
+
   private static LdapHandler makeLdapHandlerForTesting(Set<String> schema, int maxResults) {
     // TODO: This is a hack to get the tests to run against a large
     // test LDAP server without throwing an OutOfMemoryError.
@@ -213,12 +164,13 @@ public class LdapHandlerTest extends TestCase {
     LdapRule ldapRule = makeSimpleLdapRule();
     LdapHandler ldapHandler = new LdapHandler();
     ldapHandler.setLdapConnectionSettings(makeLdapConnectionSettings());
-    ldapHandler.setQueryParameters(ldapRule, schema, getSchemaKey(), maxResults);
+    ldapHandler.setQueryParameters(ldapRule, schema,
+        TEST_PROPERTIES.getProperty("schema_key"), maxResults);
     return ldapHandler;
   }
 
   private static LdapRule makeSimpleLdapRule() {
-    String filter = getTestFilter();
+    String filter = TEST_PROPERTIES.getProperty("filter");
     Scope scope = Scope.SUBTREE;
     LdapRule ldapRule = new LdapRule(scope, filter);
     return ldapRule;
