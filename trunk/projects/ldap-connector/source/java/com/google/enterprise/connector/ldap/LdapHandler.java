@@ -184,13 +184,17 @@ public class LdapHandler implements LdapHandlerI {
 
     if (ctx == null) {
       Map<LdapConnectionError, String> errors = connection.getErrors();
-      if (errors != null
-          && errors.containsKey(LdapConnectionError.CommunicationException)) {
+      if (errors.containsKey(LdapConnectionError.CommunicationException)) {
         throw new LdapTransientException(
             errors.get(LdapConnectionError.CommunicationException));
-      } else {
+      } else if (errors.isEmpty()) {
         throw new IllegalStateException(
             ErrorMessages.UNKNOWN_CONNECTION_ERROR.toString());
+      } else {
+        Map.Entry<LdapConnectionError, String> error =
+            errors.entrySet().iterator().next();
+        throw new IllegalStateException(
+            error.getKey() + ": " + error.getValue());
       }
     }
 

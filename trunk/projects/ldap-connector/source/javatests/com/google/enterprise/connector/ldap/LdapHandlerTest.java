@@ -65,6 +65,11 @@ public class LdapHandlerTest extends TestCase {
     return Sets.newHashSet(schemaString.split(","));
   }
 
+  private void assertErrorsContainsKey(Map<LdapConnectionError, String> errors,
+      LdapConnectionError error) {
+    assertTrue(errors.toString(), errors.keySet().contains(error));
+  }
+
   public void testConnectivity() {
     LdapHandler handler = new LdapHandler();
     handler.setLdapConnectionSettings(makeLdapConnectionSettings());
@@ -94,9 +99,19 @@ public class LdapHandlerTest extends TestCase {
     handler.setLdapConnectionSettings(makeInvalidLdapConnectionSettings());
     LdapContext ldapContext = handler.getLdapContext();
     assertNull(ldapContext);
-    Map<LdapConnectionError, String> errors = handler.getErrors();
-    for (LdapConnectionError e : errors.keySet()) {
-      System.out.println("Error " + e + " message: " + errors.get(e));
+    assertErrorsContainsKey(handler.getErrors(),
+        LdapConnectionError.CommunicationExceptionUnknownhost);
+  }
+
+  public void testBadConnectivity_get() {
+    LdapHandler handler = new LdapHandler();
+    handler.setLdapConnectionSettings(makeInvalidLdapConnectionSettings());
+    try {
+      handler.get();
+      fail("Expected an exception");
+    } catch (IllegalStateException expected) {
+      assertTrue(expected.getMessage(), expected.getMessage().startsWith(
+          LdapConnectionError.CommunicationExceptionUnknownhost.toString()));
     }
   }
 
@@ -112,13 +127,23 @@ public class LdapHandlerTest extends TestCase {
 
   public void testBadPasswordConnectivity() {
     LdapHandler handler = new LdapHandler();
-    handler.setLdapConnectionSettings(
-        makeBadPwdLdapConnectionSettings());
+    handler.setLdapConnectionSettings(makeBadPwdLdapConnectionSettings());
     LdapContext ldapContext = handler.getLdapContext();
     assertNull(ldapContext);
-    Map<LdapConnectionError, String> errors = handler.getErrors();
-    assertTrue(errors.keySet().contains(
-        LdapConnectionError.AuthenticationException));
+    assertErrorsContainsKey(handler.getErrors(),
+        LdapConnectionError.AuthenticationException);
+  }
+
+  public void testBadPasswordConnectivity_get() {
+    LdapHandler handler = new LdapHandler();
+    handler.setLdapConnectionSettings(makeBadPwdLdapConnectionSettings());
+    try {
+      handler.get();
+      fail("Expected an exception");
+    } catch (IllegalStateException expected) {
+      assertTrue(expected.getMessage(), expected.getMessage().startsWith(
+          LdapConnectionError.AuthenticationException.toString()));
+    }
   }
 
   private static LdapConnectionSettings makeBadPwdLdapConnectionSettings() {
@@ -139,8 +164,9 @@ public class LdapHandlerTest extends TestCase {
     handler.setLdapConnectionSettings(makeTimedoutLdapConnectionSettings());
     LdapContext ldapContext = handler.getLdapContext();
     long afterTime = System.currentTimeMillis();
-    assertEquals((afterTime - beforeTime), 10000, 100);
     assertNull(ldapContext);
+    assertEquals(handler.getErrors().toString(), 10000,
+        (afterTime - beforeTime), 100);
   }
 
   private static LdapConnectionSettings makeTimedoutLdapConnectionSettings() {
