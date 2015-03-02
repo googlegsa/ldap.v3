@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+  <bean id="ldap-connector-config" class="com.google.enterprise.connector.ldap.LdapConnectorConfig"
+    singleton="false">
+    <constructor-arg>
+      <map>
+        <entry key="hostname" value="${hostname}" />
+        <entry key="port" value="${port}" />
+        <entry key="authtype" value="${authtype}" />
+        <entry key="username" value="${username}" />
+        <entry key="password" value="${password}" />
+        <entry key="schemavalue" value="${schemavalue}" />
+        <entry key="method" value="${method}" />
+        <entry key="basedn" value="${basedn}" />
+        <entry key="filter" value="${filter}" />
+      </map>
+    </constructor-arg>
+  </bean>
+
+  <bean id="ldap-handler"
+    class="com.google.enterprise.connector.ldap.LdapHandler"
+    factory-method="makeLdapHandlerFromConfig">
+    <constructor-arg ref="ldap-connector-config" />
+  </bean>
+
+  <bean id="ldap-document-snapshot-repository-list"
+    class="com.google.enterprise.connector.ldap.LdapDocumentSnapshotRepositoryList"
+    singleton="true">
+    <constructor-arg ref="ldap-handler" />
+  </bean>
+
+  <bean id="change-queue" class="com.google.enterprise.connector.util.diffing.ChangeQueue">
+    <constructor-arg index="0" value="1000" />
+    <constructor-arg index="1" value="60000" />
+    <constructor-arg index="2" ref="activity-logger" />
+  </bean>
+
+  <bean id = "activity-logger"
+        class = "com.google.enterprise.connector.util.diffing.ChangeQueue$DefaultCrawlActivityLogger"
+        singleton = "false">
+  </bean>
+
+  <bean id="queue-dir" class="java.io.File" singleton="false">
+    <constructor-arg index="0" value="${googleConnectorWorkDir}/queue" />
+  </bean>
+
+  <bean id="snapshot-dir" class="java.io.File" singleton="false">
+    <constructor-arg index="0" value="${googleConnectorWorkDir}/snapshots" />
+  </bean>
+
+  <bean id="internal-document-handle-factory"
+    class="com.google.enterprise.connector.util.diffing.DeleteDocumentHandleFactory"
+    singleton="true">
+  </bean>
+
+  <bean id="traversal-context-manager"
+    class="com.google.enterprise.connector.util.diffing.TraversalContextManager"
+    singleton="true">
+  </bean>
+
+  <bean id="ldap-person-factory" class="com.google.enterprise.connector.ldap.LdapPersonFactory"
+    singleton="true">
+  </bean>
+
+  <bean id="checkpoint-and-change-queue"
+    class="com.google.enterprise.connector.util.diffing.CheckpointAndChangeQueue">
+    <constructor-arg ref="change-queue" />
+    <constructor-arg ref="queue-dir" />
+    <constructor-arg ref="internal-document-handle-factory" />
+    <constructor-arg ref="ldap-person-factory" />
+  </bean>
+
+  <bean id="checksum-generator" class="com.google.enterprise.connector.util.BasicChecksumGenerator">
+    <constructor-arg index="0" value="SHA1" />
+  </bean>
+
+  <bean id="authz" class="com.google.enterprise.connector.ldap.LdapAuthorizationManager"
+    singleton="false">
+  </bean>
+
+  <bean id="monitor-manager"
+    class="com.google.enterprise.connector.util.diffing.DocumentSnapshotRepositoryMonitorManagerImpl"
+    singleton="true">
+    <constructor-arg ref="ldap-document-snapshot-repository-list" />
+    <constructor-arg ref="ldap-person-factory" />
+    <constructor-arg ref="snapshot-dir" />
+    <constructor-arg ref="checksum-generator" />
+    <constructor-arg ref="change-queue" />
+    <constructor-arg ref="checkpoint-and-change-queue" />
+  </bean>
+
+  <bean id="ldap-connector" class="com.google.enterprise.connector.util.diffing.DiffingConnector"
+    singleton="false">
+    <constructor-arg ref="authz" />
+    <constructor-arg ref="monitor-manager" />
+    <constructor-arg ref="traversal-context-manager" />
+  </bean>
+  
+</beans>
