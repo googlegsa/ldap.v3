@@ -29,6 +29,6 @@ public interface LdapHandlerI extends Supplier<Map<String, Multimap<String, Stri
 
   public void setQueryParameters(LdapRule rule, Set<String> schema, String schemaKey, int maxResults);
 
-  public Map<LdapConnectionError, String> getErrors();
+  public Map<LdapConnectionError, Throwable> getErrors();
 
 }
