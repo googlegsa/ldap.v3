@@ -14,44 +14,48 @@
 
 package com.google.enterprise.connector.ldap;
 
-import com.google.enterprise.connector.ldap.MockLdapHandlers.ExceptionMockLdapHandler;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+
+import java.util.Iterator;
 
 /**
  * Tests for implementations of LdapTransientException handling in JsonDocumentFetcher iterator.
  */
-public class JsonDocumentFetcherIteratorTest extends TestCase {
+public class JsonDocumentFetcherIteratorTest {
+  @Test
+  public void testIterator_emptyResult() {
+    JsonDocumentFetcher jdf =
+        new LdapJsonDocumentFetcher(MockLdapHandlers.getExceptionMock(), new int[] { 1 });
 
- /** wait timer in milliseconds. */
-  private int[] waitTimer = new int[] { 500, 1000 };
-
-  public JsonDocumentFetcher getJsonDocumentFetcher() {
-    ExceptionMockLdapHandler excepMock = MockLdapHandlers.getExceptionMock();
-    return new LdapJsonDocumentFetcher(excepMock, waitTimer);
+    Iterator<JsonDocument> it = jdf.iterator();
+    if (it.hasNext()) {
+      fail(it.next().getDocumentId());
+    }
   }
 
-  public void testIterator() {
-
-    final int MAXITERATIONS = 2;
-    JsonDocumentFetcher jdf = getJsonDocumentFetcher();
-    assertNotNull(jdf);
+  @Test
+  public void testIterator_waitTimes() {
+    int[] waitTimer = { 200, 500 };
+    JsonDocumentFetcher jdf =
+        new LdapJsonDocumentFetcher(MockLdapHandlers.getExceptionMock(), waitTimer);
 
     for (int i = 0; i < waitTimer.length; i++) {
       long beforeTime = System.currentTimeMillis();
       jdf.iterator();
       long afterTime = System.currentTimeMillis();
-      assertEquals((afterTime - beforeTime), waitTimer[i], 100);
+      assertEquals(waitTimer[i], (afterTime - beforeTime), 100);
     }
 
-    // run again just to verify that it only waits for 1000 milliseconds ( the last 
+    // run again just to verify that it only waits for 500 milliseconds ( the last
     // wait time in array ).
-    for (int i = 0; i < MAXITERATIONS; i++) {
+    for (int i = 0; i < 2; i++) {
       long beforeTime = System.currentTimeMillis();
       jdf.iterator();
       long afterTime = System.currentTimeMillis();
-      assertEquals((afterTime - beforeTime), waitTimer[waitTimer.length - 1], 100);
+      assertEquals(waitTimer[waitTimer.length - 1], (afterTime - beforeTime), 100);
     }
-
   }
 }

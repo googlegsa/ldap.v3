@@ -37,17 +37,14 @@ import java.util.logging.Logger;
 public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
 
   private static final Logger LOG = Logger.getLogger(LdapJsonDocumentFetcher.class.getName());
-  
-  // It's okay for multiple connector instances to use this same counter,
-  // it only affects the duration of wait
-  private static volatile int waitcounter = 0; 
-  
+
+  private volatile int waitcounter = 0;
+
   /** default wait times are 1, 2, 4, 8 and 15 minutes, assigned in milliseconds.
    */
   private final int[] waitTimes; 
-  
-  private final Supplier<Map<String, Multimap<String, String>>> mapOfMultimapsSupplier;
 
+  private final Supplier<Map<String, Multimap<String, String>>> mapOfMultimapsSupplier;
 
   /**
    * Creates a JsonDocument fetcher from something that provides a sorted map of
@@ -73,7 +70,7 @@ public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
         this.mapOfMultimapsSupplier = mapOfMultimapsSupplier;
         this.waitTimes = waitTimes;
   }
-  
+
   private static Function<Entry<String, Multimap<String, String>>, Multimap<String, String>> addDocid =
       new Function<Entry<String, Multimap<String, String>>, Multimap<String, String>>() {
     @Override
