@@ -121,7 +121,7 @@ public class LdapHandler implements LdapHandlerI {
   }
 
   @Override
-  public Map<LdapConnectionError, String> getErrors() {
+  public Map<LdapConnectionError, Throwable> getErrors() {
     if (connection != null) {
       return connection.getErrors();
     }
@@ -183,7 +183,7 @@ public class LdapHandler implements LdapHandlerI {
     LOG.fine("ctx:" + ctx);
 
     if (ctx == null) {
-      Map<LdapConnectionError, String> errors = connection.getErrors();
+      Map<LdapConnectionError, Throwable> errors = connection.getErrors();
       if (errors.containsKey(LdapConnectionError.CommunicationException)) {
         throw new LdapTransientException(
             errors.get(LdapConnectionError.CommunicationException));
@@ -191,10 +191,8 @@ public class LdapHandler implements LdapHandlerI {
         throw new IllegalStateException(
             ErrorMessages.UNKNOWN_CONNECTION_ERROR.toString());
       } else {
-        Map.Entry<LdapConnectionError, String> error =
-            errors.entrySet().iterator().next();
-        throw new IllegalStateException(
-            error.getKey() + ": " + error.getValue());
+        Throwable error = errors.values().iterator().next();
+        throw new IllegalStateException(error);
       }
     }
 
@@ -398,14 +396,14 @@ public class LdapHandler implements LdapHandlerI {
         "com.sun.jndi.ldap.LdapCtxFactory";
     private static final String COM_SUN_JNDI_LDAP_CONNECT_TIMEOUT =
         "com.sun.jndi.ldap.connect.timeout";
-    
+
     private final LdapConnectionSettings settings;
     private LdapContext ldapContext = null;
-    private final Map<LdapConnectionError, String> errors;
+    private final Map<LdapConnectionError, Throwable> errors;
     private String connectionTimeOut;
 
     public static final int PAGESIZE = 1000;
-    
+
     public LdapConnection(LdapConnectionSettings ldapConnectionSettings, String connectionTimeOut) {
       LOG.fine("Configuring LdapConnection with settings: " + ldapConnectionSettings);
       this.settings = ldapConnectionSettings;
@@ -419,7 +417,7 @@ public class LdapHandler implements LdapHandlerI {
       return ldapContext;
     }
 
-    public Map<LdapConnectionError, String> getErrors() {
+    public Map<LdapConnectionError, Throwable> getErrors() {
       return errors;
     }
 
@@ -431,22 +429,20 @@ public class LdapHandler implements LdapHandlerI {
         LOG.info("Communication error : " + e.toString());
 
         if (e.getCause() instanceof NoRouteToHostException) {
-          errors.put(LdapConnectionError.CommunicationException,
-              e.getCause().getMessage());
+          errors.put(LdapConnectionError.CommunicationException, e.getCause());
         } else if (e.getCause() instanceof SocketTimeoutException) {
-          errors.put(LdapConnectionError.CommunicationExceptionTimeout, e.getCause().getMessage());
+          errors.put(LdapConnectionError.CommunicationExceptionTimeout, e.getCause());
         } else if (e.getCause() instanceof UnknownHostException) {
-          errors.put(LdapConnectionError.CommunicationExceptionUnknownhost, e.getCause()
-              .getMessage());
+          errors.put(LdapConnectionError.CommunicationExceptionUnknownhost, e.getCause());
         } else {
-          errors.put(LdapConnectionError.CommunicationException, e.getMessage());
+          errors.put(LdapConnectionError.CommunicationException, e);
         }
       } catch (AuthenticationNotSupportedException e) {
-        errors.put(LdapConnectionError.AuthenticationNotSupported, e.getMessage());
+        errors.put(LdapConnectionError.AuthenticationNotSupported, e);
       } catch (AuthenticationException e) {
-        errors.put(LdapConnectionError.AuthenticationException, e.getMessage());
+        errors.put(LdapConnectionError.AuthenticationException, e);
       } catch (NamingException e) {
-        errors.put(LdapConnectionError.NamingException, e.getMessage());
+        errors.put(LdapConnectionError.NamingException, e);
       }
       if (ctx == null) {
         return null;
@@ -455,9 +451,9 @@ public class LdapHandler implements LdapHandlerI {
         ctx.setRequestControls(new Control[] {new PagedResultsControl(pageSize, 
             Control.NONCRITICAL)});
       } catch (NamingException e) {
-        errors.put(LdapConnectionError.NamingException, e.getMessage());
+        errors.put(LdapConnectionError.NamingException, e);
       } catch (IOException e) {
-        errors.put(LdapConnectionError.IOException, e.getMessage());
+        errors.put(LdapConnectionError.IOException, e);
       }
       return ctx;
     }
