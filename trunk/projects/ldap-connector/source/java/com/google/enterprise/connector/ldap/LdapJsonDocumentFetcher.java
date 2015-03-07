@@ -23,8 +23,8 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Multimap;
 import com.google.enterprise.connector.spi.SpiConstants;
 import com.google.enterprise.connector.util.Base16;
+import com.google.enterprise.connector.util.diffing.SnapshotRepositoryRuntimeException;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -92,9 +92,8 @@ public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
       results = mapOfMultimapsSupplier.get();
       // reset wait counter
       waitcounter = 0;
-    } catch (LdapTransientException e) {
+    } catch (IllegalStateException e) {
       LOG.log(Level.SEVERE, "Encountered IllegalStateException, will wait and continue.", e);
-      results = Collections.emptyMap();
       try {
         // wait for some time to check if the unavailable ldap source would be
         // back
@@ -108,8 +107,11 @@ public class LdapJsonDocumentFetcher implements JsonDocumentFetcher {
         Thread.sleep(sleepTime);
         waitcounter++;
       } catch (InterruptedException e1) {
-        LOG.info("InterruptedException at CommunicationException catch..");
+        LOG.fine("Interrupted while waiting after IllegalStateException.");
       }
+      // The full stack trace was logged above, before the wait period,
+      // so pass a null cause rather than e.
+      throw new SnapshotRepositoryRuntimeException(e.getMessage(), null);
     }
 
     return Iterators.transform(results.entrySet().iterator(),

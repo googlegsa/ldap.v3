@@ -92,7 +92,7 @@ public class LdapHandler implements LdapHandlerI {
 
   public LdapHandler() {
   }
-  
+
   public void setConnectionTimeout(String ldapConnectionTimeout) {
     this.ldapConnectionTimeout = ldapConnectionTimeout;
   }
@@ -184,10 +184,7 @@ public class LdapHandler implements LdapHandlerI {
 
     if (ctx == null) {
       Map<LdapConnectionError, Throwable> errors = connection.getErrors();
-      if (errors.containsKey(LdapConnectionError.CommunicationException)) {
-        throw new LdapTransientException(
-            errors.get(LdapConnectionError.CommunicationException));
-      } else if (errors.isEmpty()) {
+      if (errors.isEmpty()) {
         throw new IllegalStateException(
             ErrorMessages.UNKNOWN_CONNECTION_ERROR.toString());
       } else {
@@ -200,7 +197,7 @@ public class LdapHandler implements LdapHandlerI {
     int resultCount = 0;
     byte[] cookie = null;
     try {      
-      
+
       do {
         SearchControls controls = makeControls(rule, schema);
 
@@ -267,7 +264,7 @@ public class LdapHandler implements LdapHandlerI {
       } while (!shouldStop(cookie));
 
     } catch (CommunicationException e) {
-      throw new LdapTransientException(e);
+      throw new IllegalStateException(e);
     } catch (NameNotFoundException e) {
       throw new IllegalStateException(e);
     } catch (NamingException e) {
@@ -500,7 +497,7 @@ public class LdapHandler implements LdapHandlerI {
 
       // force the following attributes to be returned as binary data
       env.put("java.naming.ldap.attributes.binary", "objectGUID objectSid");
-      
+
       // Specify connection timeout, value of zero or less means use networks timeout value
       env.put(COM_SUN_JNDI_LDAP_CONNECT_TIMEOUT, connectionTimeOut);    
 
