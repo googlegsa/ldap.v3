@@ -138,7 +138,7 @@ public class MockLdapHandlers {
       try {
         throw new CommunicationException("From ExceptionMockLdapHandler");
       } catch (CommunicationException e) {
-        throw new LdapTransientException(e);
+        throw new IllegalStateException(e);
       }
     }
   }

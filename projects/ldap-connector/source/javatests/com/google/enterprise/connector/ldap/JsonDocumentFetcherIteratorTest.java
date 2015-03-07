@@ -17,34 +17,27 @@ package com.google.enterprise.connector.ldap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.google.enterprise.connector.util.diffing.SnapshotRepositoryRuntimeException;
+
 import org.junit.Test;
 
-import java.util.Iterator;
-
 /**
- * Tests for implementations of LdapTransientException handling in JsonDocumentFetcher iterator.
+ * Tests for implementations of IllegalStateException handling in JsonDocumentFetcher iterator.
  */
 public class JsonDocumentFetcherIteratorTest {
   @Test
-  public void testIterator_emptyResult() {
-    JsonDocumentFetcher jdf =
-        new LdapJsonDocumentFetcher(MockLdapHandlers.getExceptionMock(), new int[] { 1 });
-
-    Iterator<JsonDocument> it = jdf.iterator();
-    if (it.hasNext()) {
-      fail(it.next().getDocumentId());
-    }
-  }
-
-  @Test
-  public void testIterator_waitTimes() {
+  public void testIterator() {
     int[] waitTimer = { 200, 500 };
     JsonDocumentFetcher jdf =
         new LdapJsonDocumentFetcher(MockLdapHandlers.getExceptionMock(), waitTimer);
 
     for (int i = 0; i < waitTimer.length; i++) {
       long beforeTime = System.currentTimeMillis();
-      jdf.iterator();
+      try {
+        jdf.iterator();
+        fail("Expected a SnapshotRepositoryRuntimeException");
+      } catch (SnapshotRepositoryRuntimeException expected) {
+      }
       long afterTime = System.currentTimeMillis();
       assertEquals(waitTimer[i], (afterTime - beforeTime), 100);
     }
@@ -53,7 +46,11 @@ public class JsonDocumentFetcherIteratorTest {
     // wait time in array ).
     for (int i = 0; i < 2; i++) {
       long beforeTime = System.currentTimeMillis();
-      jdf.iterator();
+      try {
+        jdf.iterator();
+        fail("Expected a SnapshotRepositoryRuntimeException");
+      } catch (SnapshotRepositoryRuntimeException expected) {
+      }
       long afterTime = System.currentTimeMillis();
       assertEquals(waitTimer[waitTimer.length - 1], (afterTime - beforeTime), 100);
     }
