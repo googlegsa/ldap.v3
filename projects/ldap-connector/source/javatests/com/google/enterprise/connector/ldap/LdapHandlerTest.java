@@ -27,11 +27,13 @@ import com.google.enterprise.connector.ldap.LdapHandler.LdapRule.Scope;
 
 import junit.framework.TestCase;
 
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.naming.AuthenticationException;
 import javax.naming.ldap.LdapContext;
 
 /**
@@ -65,7 +67,7 @@ public class LdapHandlerTest extends TestCase {
     return Sets.newHashSet(schemaString.split(","));
   }
 
-  private void assertErrorsContainsKey(Map<LdapConnectionError, String> errors,
+  private void assertErrorsContainsKey(Map<LdapConnectionError, Throwable> errors,
       LdapConnectionError error) {
     assertTrue(errors.toString(), errors.keySet().contains(error));
   }
@@ -110,8 +112,9 @@ public class LdapHandlerTest extends TestCase {
       handler.get();
       fail("Expected an exception");
     } catch (IllegalStateException expected) {
-      assertTrue(expected.getMessage(), expected.getMessage().startsWith(
-          LdapConnectionError.CommunicationExceptionUnknownhost.toString()));
+      assertNotNull(expected.toString(), expected.getCause());
+      assertTrue(expected.getCause().toString(),
+          expected.getCause() instanceof UnknownHostException);
     }
   }
 
@@ -141,8 +144,9 @@ public class LdapHandlerTest extends TestCase {
       handler.get();
       fail("Expected an exception");
     } catch (IllegalStateException expected) {
-      assertTrue(expected.getMessage(), expected.getMessage().startsWith(
-          LdapConnectionError.AuthenticationException.toString()));
+      assertNotNull(expected.toString(), expected.getCause());
+      assertTrue(expected.getCause().toString(),
+          expected.getCause() instanceof AuthenticationException);
     }
   }
 

@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.naming.CommunicationException;
+import javax.naming.NamingException;
 
 public class MockLdapHandlers {
 
@@ -86,9 +87,10 @@ public class MockLdapHandlers {
     }
 
     @Override
-    public Map<LdapConnectionError, String> getErrors() {
+    public Map<LdapConnectionError, Throwable> getErrors() {
       if (!isValid) {
-        return ImmutableMap.of(LdapConnectionError.NamingException, "from mock handler");
+        Throwable t = new NamingException("from mock handler");
+        return ImmutableMap.of(LdapConnectionError.NamingException, t);
       }
       return ImmutableMap.of();
     }
@@ -136,7 +138,7 @@ public class MockLdapHandlers {
       try {
         throw new CommunicationException("From ExceptionMockLdapHandler");
       } catch (CommunicationException e) {
-        throw new LdapTransientException(e);
+        throw new IllegalStateException(e);
       }
     }
   }
@@ -225,7 +227,7 @@ public class MockLdapHandlers {
     }
 
     @Override
-    public Map<LdapConnectionError, String> getErrors() {
+    public Map<LdapConnectionError, Throwable> getErrors() {
       return ImmutableMap.of();
     }
 
@@ -270,7 +272,7 @@ public class MockLdapHandlers {
     }
 
     @Override
-    public Map<LdapConnectionError, String> getErrors() {
+    public Map<LdapConnectionError, Throwable> getErrors() {
       return ImmutableMap.of();
     }
 

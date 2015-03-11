@@ -408,7 +408,7 @@ public class LdapConnectorType implements ConnectorType {
       ldapHandler.setLdapConnectionSettings(settings);
 
       // report any connection errors
-      Map<LdapConnectionError, String> errors = ldapHandler.getErrors();
+      Map<LdapConnectionError, Throwable> errors = ldapHandler.getErrors();
       if (errors.size() > 0) {
         String errorMessage = "";
         for (LdapConnectionError e : errors.keySet()) {
