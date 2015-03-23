@@ -9,6 +9,37 @@ documentation.
 
 Web Site: http://code.google.com/p/google-enterprise-connector-ldap/
 
+Release 3.2.10, March 20, 2015
+==============================
+
+Introduction
+------------
+This is a maintenance release that improves quality without
+adding any new functionality. Users of previous releases are
+encouraged to upgrade.
+
+Issues Fixed Since 3.2.8
+------------------------
+19613613 - LDAP errors that stopped the monitor thread logged only a
+           generic "UNKNOWN_CONNECTION_ERROR" message.
+
+19613118 - Some LDAP errors could stop the monitor thread and prevent
+           further indexing of updates and deletes. The error was only
+           logged to the Tomcat stderr log (catalina.out on Linux),
+           rather than the connector logs.
+
+19044850 - LDAP connector sends delete feeds after connection refused
+           with LDAP server.
+
+Version Compatibility
+---------------------
+Connector instances created using versions 2.6.0 through 3.2.8
+may be used with this version. This version works with 
+Connector Manager version 3.2.4 or later. Earlier versions of 
+the Connector Manager will not work correctly with this version
+of the connector.
+
+
 Release 3.2.8, July 24, 2014
 ============================
 
@@ -17,7 +48,6 @@ Introduction
 This is a maintenance release that improves quality without
 adding any new functionality. It is not necessary to upgrade 
 to this version.
-
 
 Version Compatibility
 ---------------------
