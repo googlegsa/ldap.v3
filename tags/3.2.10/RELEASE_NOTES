@@ -1,0 +1,157 @@
+
+              Google Search Appliance Connector for LDAP
+                            Release Notes
+
+This document contains the release notes for Google Search Appliance
+Connector for LDAP. The following sections describe the release in
+detail and provide information that supplements the main
+documentation.
+
+Web Site: http://code.google.com/p/google-enterprise-connector-ldap/
+
+Release 3.2.10, March 20, 2015
+==============================
+
+Introduction
+------------
+This is a maintenance release that improves quality without
+adding any new functionality. Users of previous releases are
+encouraged to upgrade.
+
+Issues Fixed Since 3.2.8
+------------------------
+19613613 - LDAP errors that stopped the monitor thread logged only a
+           generic "UNKNOWN_CONNECTION_ERROR" message.
+
+19613118 - Some LDAP errors could stop the monitor thread and prevent
+           further indexing of updates and deletes. The error was only
+           logged to the Tomcat stderr log (catalina.out on Linux),
+           rather than the connector logs.
+
+19044850 - LDAP connector sends delete feeds after connection refused
+           with LDAP server.
+
+Version Compatibility
+---------------------
+Connector instances created using versions 2.6.0 through 3.2.8
+may be used with this version. This version works with 
+Connector Manager version 3.2.4 or later. Earlier versions of 
+the Connector Manager will not work correctly with this version
+of the connector.
+
+
+Release 3.2.8, July 24, 2014
+============================
+
+Introduction
+------------
+This is a maintenance release that improves quality without
+adding any new functionality. It is not necessary to upgrade 
+to this version.
+
+Version Compatibility
+---------------------
+Connector instances created using versions 2.6.0 through 3.0.8
+may be used with this version. This version works with 
+Connector Manager version 3.2.4 or later. Earlier versions of 
+the Connector Manager will not work correctly with this version
+of the connector.
+
+
+Release 3.0.8, May 29, 2013
+===========================
+
+Introduction
+------------
+This is a maintenance release that improves quality without
+adding any new functionality. Users of previous releases are
+encouraged to review the changes below to determine whether 
+to upgrade.
+
+Summary of Changes
+------------------
+  * Fixed issue 8163039: Ldap connector fails to recover after 
+    java.net.NoRouteToHostException.
+  * Fixed issue 6513826: Add less verbose logging level for 
+    MBean messages.
+  * Fixed issue 3096499: Error/Warning messages displayed on LDAP 
+    connector configuration screen should be more precise.
+
+Version Compatibility
+---------------------
+Connector instances created using versions 2.8.2, 2.6.4, 2.6.0 
+and 3.0.0 may be used with this version. This version works with 
+Connector Manager version 3.0.0 or later. Earlier versions of 
+the Connector Manager will not work correctly with this version
+of the connector.
+
+
+Release 3.0.0, May 15, 2012
+===========================
+
+Introduction
+------------
+This is a maintenance release that improves quality without
+adding any new functionality. Users of previous releases are
+encouraged to upgrade.
+
+Summary of Changes
+------------------
+  * Fixed issue 3096443: If no properties are selected for
+    indexing while configuring LDAP connector , Connector instance
+    cannot be saved.
+
+Version Compatibility
+---------------------
+Connector instances created using versions 2.8.2, 2.6.4 and 2.6.0 may be
+used with this version. This version works with Connector Manager
+version 2.8.0 or later. Earlier versions of the Connector Manager 
+will not work correctly with this version of the connector.
+
+
+Release 2.8.2, Oct 20, 2011
+===========================
+
+Introduction
+------------
+This is a preview maintenance release that improves quality without
+adding any new functionality. Users of previous releases are
+encouraged to upgrade.
+
+Summary of Changes
+------------------
+  * Fixed issue 3266950: The connector only saved up to 100 selected
+    attributes and only from the first 100 listed on the configuration
+    form would be saved. Selected attributes beyond the first 100
+    shown on the configuration form would be ignored. All selected
+    attributes are now saved and indexed. Manual edits to the
+    connector properties file to workaround this issue will be
+    preserved in the upgrade.
+  * Fixed issue 4150942: Feeds stopped when the LDAP server was
+    unavailable and did not resume until the connector was restarted.
+    The connector now pauses after this error and retries until the
+    LDAP server is available.
+
+Version Compatibility
+---------------------
+Connector instances created using versions 2.6.0 and 2.6.4 may be
+used with this version. This version works with Connector Manager
+version 2.8. Earlier versions of the Connector Manager will not work
+correctly with this version of the connector.
+
+
+Release 2.6.4, Oct 12, 2010
+===========================
+
+Introduction
+------------
+This is the first preview release of the product. Users of previous
+releases are strongly encouraged to upgrade.
+
+
+Release 2.6.0, Aug 11, 2011
+===========================
+
+Introduction
+------------
+This is an unsupported, beta release of the product.
