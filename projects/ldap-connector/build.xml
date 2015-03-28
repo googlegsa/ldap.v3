@@ -15,7 +15,7 @@
   <property name="COMPILE_TARGET" value="1.6" />
   <property name="COMPILE_BOOTCLASSPATH" value="${build.bootclasspath}" />
 
-  <property name="downloads.dir" value="downloads" />
+  <property name="downloads.dir" location="downloads" />
   <property name="build.dir" value="build" />
   <property name="build-prod.dir" value="${build.dir}/prod" />
   <property name="build-prod-config.dir" value="${build-prod.dir}/config" />
@@ -317,38 +317,17 @@
           depends="init,compile_prod,jar_prod,init-downloads">
     <property name="src.archive" value="${downloads.prefix}-src" />
 
-    <!-- Use 'svn export' to create a clean version of the source tree
-         in the build dir.  You can adjust the behaviour of this by setting
-         some properties when invoking ant:
-
-         svn.export.revision - the revision of the tree to pull from svn.
-         svn.export.source - the source of the tree, either a svn repository
-                             URL, or a pathname of a working directory tree.
-
-         Note: you cannot specify both svn.export.revision and point
-         svn.export.source at a local working tree.
-    -->
-    <condition property="svn.export.revision.arg"
-               value="-r ${svn.export.revision}" 
-               else="" >
-      <isset property="svn.export.revision"/>
-    </condition>
-    <property name="svn.export.source" value=".." />
-    <property name="svn.export.dir" value="${build.dir}/${src.archive}" />
-
-    <delete dir="${svn.export.dir}" quiet="true" /> 
-    <exec executable="svn">
-      <arg line="export ${svn.export.revision.arg} ${svn.export.source} ${svn.export.dir}" />
+    <exec executable="git" failonerror="true" outputproperty="git.root">
+      <arg line="rev-parse --show-toplevel" />
     </exec>
-
-    <!-- Create .zip archive of the exported source tree.
-         Also creates SHA-1 checksum -->
-    <zip destfile="${downloads.dir}/${src.archive}.zip">
-          <zipfileset dir="${svn.export.dir}" prefix="${src.archive}" />
-    </zip>
+    <exec executable="git" dir="${git.root}" failonerror="true">
+      <arg value="archive" />
+      <arg value="--format=zip" />
+      <arg value="--prefix=${src.archive}/" />
+      <arg value="--output=${downloads.dir}/${src.archive}.zip" />
+      <arg value="HEAD" />
+    </exec>
     <checksum algorithm="SHA-1" file="${downloads.dir}/${src.archive}.zip"/>
-
-    <delete dir="${svn.export.dir}" quiet="true" />
   </target>
 
   <target name="repackage" depends="init-downloads"
