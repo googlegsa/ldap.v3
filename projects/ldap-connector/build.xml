@@ -315,19 +315,8 @@
 
   <target name="src-archive"
           depends="init,compile_prod,jar_prod,init-downloads">
-    <property name="src.archive" value="${downloads.prefix}-src" />
-
-    <exec executable="git" failonerror="true" outputproperty="git.root">
-      <arg line="rev-parse --show-toplevel" />
-    </exec>
-    <exec executable="git" dir="${git.root}" failonerror="true">
-      <arg value="archive" />
-      <arg value="--format=zip" />
-      <arg value="--prefix=${src.archive}/" />
-      <arg value="--output=${downloads.dir}/${src.archive}.zip" />
-      <arg value="HEAD" />
-    </exec>
-    <checksum algorithm="SHA-1" file="${downloads.dir}/${src.archive}.zip"/>
+    <archive-source downloads.dir="${downloads.dir}"
+                    downloads.prefix="${downloads.prefix}" />
   </target>
 
   <target name="repackage" depends="init-downloads"
