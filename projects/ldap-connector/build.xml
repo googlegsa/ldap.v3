@@ -42,8 +42,6 @@
   <property name="jar-tests.dir" value="${build-tests.dir}/jar" />
   <property name="jar-tests.file" value="${jar-tests.dir}/connector-ldap-tests.jar" />
 
-  <property name="tests_out.dir" value="tests_outdir" />
-
   <property name="zip.dir" value  = "${build.dir}/file" />
   <property name="config-zip.dir" value  = "${zip.dir}/Config" />
   <property name="lib-zip.dir" value  = "${zip.dir}/Lib" />
@@ -87,7 +85,6 @@
     <mkdir dir="${classes-prod.dir}" />
     <mkdir dir="${classes-tests.dir}" />
     <mkdir dir="${jar-tests.dir}" />
-    <mkdir dir="${tests_out.dir}" />
   </target>
 
   <target name="compile" depends="init">
@@ -172,16 +169,9 @@
       </classpath>
       <syspropertyset refid="javatest.properties"/>
       <formatter type="xml" />
+      <formatter type="brief" usefile="no"/>
       <batchtest todir="${reports.xml.dir}">
         <fileset dir="${test.dir}">
-          <include name="**/${test.suite}Test.java" />
-        </fileset>
-      </batchtest>
-
-      <formatter type="brief" usefile="no"/>
-      <formatter type="plain" />
-      <batchtest fork="yes" todir="${tests_out.dir}">
-        <fileset dir="${src-tests.dir}">
           <include name="**/${test.suite}Test.java" />
         </fileset>
       </batchtest>
