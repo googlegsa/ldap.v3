@@ -7,7 +7,17 @@ Connector for LDAP. The following sections describe the release in
 detail and provide information that supplements the main
 documentation.
 
-Web Site: http://code.google.com/p/google-enterprise-connector-ldap/
+For information about the latest version of the Connector for LDAP,
+see the version 4 overview page and GitHub project:
+
+    http://googlegsa.github.io/adaptor/index.html
+
+    https://github.com/googlegsa/ldap
+
+For more about version 3, see the version 3 GitHub project:
+
+    https://github.com/googlegsa/ldap.v3
+
 
 Release 3.2.10, March 20, 2015
 ==============================
